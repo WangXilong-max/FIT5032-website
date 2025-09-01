@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 const sportsNews = ref([
   {
@@ -7,7 +7,7 @@ const sportsNews = ref([
     title: 'Weekend Badminton Tournament - Registration Open',
     summary: 'Join our amateur badminton tournament at the city sports center. Players of all levels welcome!',
     date: '2024-01-15',
-    image: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=400&h=250&fit=crop',
+    image: '/badminton.jpeg',
     category: 'Badminton'
   },
   {
@@ -15,7 +15,7 @@ const sportsNews = ref([
     title: '3v3 Street Basketball Challenge Recruitment',
     summary: 'Show off your street ball skills and compete against the city\'s strongest teams',
     date: '2024-01-14',
-    image: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=400&h=250&fit=crop',
+    image: '/basketball.jpeg',
     category: 'Basketball'
   },
   {
@@ -23,7 +23,7 @@ const sportsNews = ref([
     title: 'Swimming Club Adds Evening Sessions',
     summary: 'New 8-10 PM time slots exclusively for working professionals with professional coaching',
     date: '2024-01-13',
-    image: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=400&h=250&fit=crop',
+    image: '/swimming.jpeg',
     category: 'Swimming'
   },
   {
@@ -31,7 +31,7 @@ const sportsNews = ref([
     title: 'Youth Football Academy Spring Enrollment',
     summary: 'Professional youth coaching team to develop the next generation of football stars',
     date: '2024-01-12',
-    image: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&h=250&fit=crop',
+    image: '/football.jpeg',
     category: 'Football'
   },
   {
@@ -47,7 +47,7 @@ const sportsNews = ref([
     title: 'Table Tennis Open Championship - Registration Deadline',
     summary: 'Only 3 days left to register! Don\'t miss your chance to showcase your skills',
     date: '2024-01-10',
-    image: 'https://images.unsplash.com/photo-1609710228159-0fa9bd7c0827?w=400&h=250&fit=crop',
+    image: '/table tennis.jpeg',
     category: 'Table Tennis'
   }
 ])
@@ -60,6 +60,11 @@ onMounted(() => {
     isScrolled.value = window.scrollY > 50
   }
   window.addEventListener('scroll', handleScroll)
+  
+  // 组件卸载时清理事件监听器
+  onUnmounted(() => {
+    window.removeEventListener('scroll', handleScroll)
+  })
 })
 </script>
 
@@ -115,20 +120,18 @@ onMounted(() => {
           </div>
         </div>
       </div>
-      
 
       <div class="scroll-indicator position-absolute bottom-0 start-50 translate-middle-x mb-4">
         <div class="scroll-arrow"></div>
       </div>
     </section>
 
-
-    <section id="news" class="py-5 bg-light">
+    <section id="news" class="py-5 news-section text-white">
       <div class="container py-5">
         <div class="row text-center mb-5">
           <div class="col-lg-8 mx-auto">
             <h2 class="display-4 fw-bold mb-3">Sports News</h2>
-            <p class="lead text-muted">Stay updated with the latest local sports activities and events</p>
+            <p class="lead text-light opacity-75">Stay updated with the latest local sports activities and events</p>
           </div>
         </div>
         
@@ -138,19 +141,19 @@ onMounted(() => {
             :key="news.id" 
             class="news-item"
           >
-            <div class="card h-100 shadow-sm news-card border-0">
+            <div class="card news-card">
               <div class="position-relative overflow-hidden">
-                <img :src="news.image" :alt="news.title" class="card-img-top news-image" style="height: 250px; object-fit: cover;">
+                <img :src="news.image" :alt="news.title" class="card-img-top news-image">
                 <div class="position-absolute top-0 start-0 m-3">
                   <span class="badge bg-primary rounded-pill">{{ news.category }}</span>
                 </div>
               </div>
-              <div class="card-body d-flex flex-column">
+              <div class="card-body d-flex flex-column news-content">
                 <div class="d-flex align-items-center mb-2">
                   <small class="text-primary fw-semibold">{{ news.date }}</small>
                 </div>
                 <h5 class="card-title fw-bold">{{ news.title }}</h5>
-                <p class="card-text text-muted flex-grow-1">{{ news.summary }}</p>
+                <p class="card-text text-muted">{{ news.summary }}</p>
                 <button class="btn btn-outline-primary mt-auto align-self-start">
                   Read More <i class="bi bi-arrow-right ms-1"></i>
                 </button>
@@ -160,69 +163,6 @@ onMounted(() => {
         </div>
       </div>
     </section>
-
-
-    <section class="py-5 bg-primary text-white">
-      <div class="container py-5">
-        <div class="row text-center mb-5">
-          <div class="col-lg-8 mx-auto">
-            <h2 class="display-4 fw-bold mb-3">Why Choose SportSync</h2>
-            <p class="lead opacity-75">Empowering Melbourne communities through accessible, inclusive sport for everyone</p>
-          </div>
-        </div>
-        
-        <div class="features-grid">
-          <div class="feature-item text-center">
-            <div class="feature-icon bg-white text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-              <i class="bi bi-globe-asia-australia fs-1"></i>
-            </div>
-            <h4 class="fw-bold mb-3">Community Reach</h4>
-            <p class="opacity-75">Discover local sporting events and health activities across Melbourne, connecting you with your community</p>
-          </div>
-          
-          <div class="feature-item text-center">
-            <div class="feature-icon bg-white text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-              <i class="bi bi-heart fs-1"></i>
-            </div>
-            <h4 class="fw-bold mb-3">Health & Wellbeing</h4>
-            <p class="opacity-75">Improve both physical and mental health through regular activity, with resources for all fitness levels</p>
-          </div>
-          
-          <div class="feature-item text-center">
-            <div class="feature-icon bg-white text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-              <i class="bi bi-universal-access fs-1"></i>
-            </div>
-            <h4 class="fw-bold mb-3">Inclusive Access</h4>
-            <p class="opacity-75">Activities for all ages, backgrounds, and abilities - from beginners to advanced participants</p>
-          </div>
-          
-          <div class="feature-item text-center">
-            <div class="feature-icon bg-white text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-              <i class="bi bi-calendar-event fs-1"></i>
-            </div>
-            <h4 class="fw-bold mb-3">Easy Registration</h4>
-            <p class="opacity-75">One-click event registration with automated reminders and streamlined participant management</p>
-          </div>
-          
-          <div class="feature-item text-center">
-            <div class="feature-icon bg-white text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-              <i class="bi bi-people fs-1"></i>
-            </div>
-            <h4 class="fw-bold mb-3">Volunteer Hub</h4>
-            <p class="opacity-75">Join our community of volunteers and organisers to help run events and strengthen local connections</p>
-          </div>
-          
-          <div class="feature-item text-center">
-            <div class="feature-icon bg-white text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-              <i class="bi bi-book fs-1"></i>
-            </div>
-            <h4 class="fw-bold mb-3">Health Education</h4>
-            <p class="opacity-75">Access sport-specific health tips, injury prevention advice, and nutrition guidance to support your journey</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
 
     <footer class="bg-dark text-white py-5">
       <div class="container">
@@ -306,8 +246,6 @@ body, html {
   overflow-x: hidden;
 }
 
-
-
 .navbar {
   background: rgba(0, 0, 0, 0.1) !important;
   backdrop-filter: blur(10px);
@@ -328,7 +266,7 @@ body, html {
 }
 
 .hero-section {
-  background: url('/hero-background.jpeg') center/cover no-repeat !important;
+  background: url('/hero-background.jpg') center/cover no-repeat !important;
   position: relative;
   min-height: 100vh !important;
 }
@@ -350,11 +288,6 @@ body, html {
   color: white !important;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
   font-weight: 800;
-}
-
-@keyframes shimmer {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
 }
 
 .hero-subtitle {
@@ -418,35 +351,39 @@ body, html {
   transition: all 0.3s ease;
   border-radius: 20px !important;
   overflow: hidden;
+  background: #ffffff !important;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
 }
 
 .news-card:hover {
   transform: translateY(-10px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 20px 50px rgba(255, 255, 255, 0.2) !important;
 }
 
 .news-image {
   transition: transform 0.3s ease;
+  width: 100% !important;
+  height: 250px !important;
+  object-fit: cover !important;
+  object-position: center !important;
 }
 
 .news-card:hover .news-image {
   transform: scale(1.1);
 }
 
-.feature-icon {
-  font-size: 2.5rem;
-  transition: all 0.3s ease;
+/* 统一内容区域高度 */
+.news-content {
+  height: 180px !important;
+  padding: 1.5rem !important;
+  overflow: hidden;
 }
 
-.feature-icon:hover {
-  transform: scale(1.1);
-}
-
-/* 基础新闻网格布局 - 固定两行三列 */
+/* 基础新闻网格布局 */
 .news-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(2, 1fr);
   gap: 2rem;
   width: 100%;
 }
@@ -455,17 +392,9 @@ body, html {
   width: 100%;
 }
 
-/* 基础特色功能网格布局 - 固定两行三列 */
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  gap: 2rem;
-  width: 100%;
-}
-
-.feature-item {
-  width: 100%;
+/* 新闻区域纯黑色背景 */
+.news-section {
+  background: #000000 !important;
 }
 
 /* 基础底栏布局 - 固定一行五列 */
@@ -480,13 +409,7 @@ body, html {
   width: 100%;
 }
 
-/* 一致性响应式设计 - 保持相同布局结构 */
-
-/* 所有设备都保持相同的网格结构，只调整尺寸和间距 */
-
-/* 超小屏幕设备 (小于 576px) - 手机竖屏 */
 @media (max-width: 575.98px) {
-  /* 保持两行三列，但缩小尺寸 */
   .hero-title {
     font-size: clamp(2rem, 8vw, 2.5rem) !important;
   }
@@ -498,16 +421,20 @@ body, html {
   .display-4 {
     font-size: clamp(1.5rem, 6vw, 2rem) !important;
   }
-  
-  /* 保持三列网格，但元素更小 */
+
   .news-grid {
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 0.5rem;
   }
   
-  .features-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 0.5rem;
+  .news-content {
+    height: 140px !important;
+    padding: 1rem !important;
+    overflow: hidden;
+  }
+  
+  .news-image {
+    height: 180px !important;
   }
   
   .footer-content {
@@ -532,12 +459,6 @@ body, html {
     font-size: 0.9rem;
   }
   
-  .feature-icon {
-    width: 50px !important;
-    height: 50px !important;
-    font-size: 1.2rem !important;
-  }
-  
   .container {
     padding-left: 0.5rem !important;
     padding-right: 0.5rem !important;
@@ -554,7 +475,6 @@ body, html {
   }
 }
 
-/* 小屏幕设备 (576px - 767.98px) - 手机横屏/小平板 */
 @media (min-width: 576px) and (max-width: 767.98px) {
   .hero-title {
     font-size: clamp(2.5rem, 6vw, 3rem) !important;
@@ -568,15 +488,19 @@ body, html {
     font-size: clamp(1.8rem, 5vw, 2.2rem) !important;
   }
   
-  /* 保持三列网格 */
   .news-grid {
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 1rem;
   }
   
-  .features-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 1rem;
+  .news-content {
+    height: 160px !important;
+    padding: 1.2rem !important;
+    overflow: hidden;
+  }
+  
+  .news-image {
+    height: 200px !important;
   }
   
   .footer-content {
@@ -587,12 +511,6 @@ body, html {
   .btn {
     padding: 10px 20px;
     font-size: 0.95rem;
-  }
-  
-  .feature-icon {
-    width: 60px !important;
-    height: 60px !important;
-    font-size: 1.3rem !important;
   }
 }
 
@@ -609,26 +527,24 @@ body, html {
     font-size: clamp(2rem, 4vw, 2.4rem) !important;
   }
   
-
   .news-grid {
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 1.5rem;
   }
   
-  .features-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 1.5rem;
+  .news-content {
+    height: 170px !important;
+    padding: 1.3rem !important;
+    overflow: hidden;
+  }
+  
+  .news-image {
+    height: 220px !important;
   }
   
   .footer-content {
     grid-template-columns: repeat(5, 1fr) !important;
     gap: 1.5rem;
-  }
-  
-  .feature-icon {
-    width: 65px !important;
-    height: 65px !important;
-    font-size: 1.4rem !important;
   }
 }
 
@@ -650,20 +566,19 @@ body, html {
     gap: 1.8rem;
   }
   
-  .features-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 1.8rem;
+  .news-content {
+    height: 175px !important;
+    padding: 1.4rem !important;
+    overflow: hidden;
+  }
+  
+  .news-image {
+    height: 240px !important;
   }
   
   .footer-content {
     grid-template-columns: repeat(5, 1fr) !important;
     gap: 1.8rem;
-  }
-  
-  .feature-icon {
-    width: 70px !important;
-    height: 70px !important;
-    font-size: 1.5rem !important;
   }
 }
 
@@ -680,26 +595,24 @@ body, html {
     font-size: clamp(2.4rem, 2.5vw, 2.8rem) !important;
   }
   
-
   .news-grid {
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 2rem;
   }
   
-  .features-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 2rem;
+  .news-content {
+    height: 180px !important;
+    padding: 1.5rem !important;
+    overflow: hidden;
+  }
+  
+  .news-image {
+    height: 250px !important;
   }
   
   .footer-content {
     grid-template-columns: repeat(5, 1fr) !important;
     gap: 2rem;
-  }
-  
-  .feature-icon {
-    width: 75px !important;
-    height: 75px !important;
-    font-size: 1.6rem !important;
   }
 }
 
@@ -717,26 +630,24 @@ body, html {
     font-size: clamp(2.6rem, 2vw, 3rem) !important;
   }
   
-
   .news-grid {
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 2.5rem;
   }
   
-  .features-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 2.5rem;
+  .news-content {
+    height: 190px !important;
+    padding: 1.6rem !important;
+    overflow: hidden;
+  }
+  
+  .news-image {
+    height: 270px !important;
   }
   
   .footer-content {
     grid-template-columns: repeat(5, 1fr) !important;
     gap: 2.5rem;
-  }
-  
-  .feature-icon {
-    width: 80px !important;
-    height: 80px !important;
-    font-size: 1.8rem !important;
   }
 }
 
