@@ -226,14 +226,13 @@ onMounted(() => {
 
     <footer class="bg-dark text-white py-5">
       <div class="container">
-        <div class="row g-4">
-          <div class="col-lg-3 col-md-6">
+        <div class="footer-content">
+          <div class="footer-item">
             <h5 class="fw-bold mb-3">SportSync</h5>
             <p class="text-muted">Making sports a part of life, connecting every sports enthusiast</p>
-
           </div>
           
-          <div class="col-lg-2 col-md-6">
+          <div class="footer-item">
             <h6 class="fw-bold mb-3">Quick Links</h6>
             <ul class="list-unstyled">
               <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Book Activities</a></li>
@@ -243,7 +242,7 @@ onMounted(() => {
             </ul>
           </div>
           
-          <div class="col-lg-2 col-md-6">
+          <div class="footer-item">
             <h6 class="fw-bold mb-3">Support</h6>
             <ul class="list-unstyled">
               <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Help Center</a></li>
@@ -253,7 +252,7 @@ onMounted(() => {
             </ul>
           </div>
           
-          <div class="col-lg-2 col-md-6">
+          <div class="footer-item">
             <h6 class="fw-bold mb-3">Legal</h6>
             <ul class="list-unstyled">
               <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Privacy Policy</a></li>
@@ -263,7 +262,7 @@ onMounted(() => {
             </ul>
           </div>
           
-          <div class="col-lg-3 col-md-6">
+          <div class="footer-item">
             <h6 class="fw-bold mb-3">Contact Us</h6>
             <ul class="list-unstyled">
               <li class="mb-2 text-muted">
@@ -469,6 +468,18 @@ body, html {
   width: 100%;
 }
 
+/* 基础底栏布局 - 固定一行五列 */
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2rem;
+  width: 100%;
+}
+
+.footer-item {
+  width: 100%;
+}
+
 /* 一致性响应式设计 - 保持相同布局结构 */
 
 /* 所有设备都保持相同的网格结构，只调整尺寸和间距 */
@@ -499,6 +510,11 @@ body, html {
     gap: 0.5rem;
   }
   
+  .footer-content {
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 0.5rem;
+  }
+  
   .news-card {
     font-size: 0.8rem;
   }
@@ -525,6 +541,16 @@ body, html {
   .container {
     padding-left: 0.5rem !important;
     padding-right: 0.5rem !important;
+  }
+  
+  .footer-item h5,
+  .footer-item h6 {
+    font-size: 0.9rem !important;
+  }
+  
+  .footer-item p,
+  .footer-item ul li {
+    font-size: 0.75rem !important;
   }
 }
 
@@ -553,6 +579,11 @@ body, html {
     gap: 1rem;
   }
   
+  .footer-content {
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 1rem;
+  }
+  
   .btn {
     padding: 10px 20px;
     font-size: 0.95rem;
@@ -565,7 +596,6 @@ body, html {
   }
 }
 
-/* 中等屏幕设备 (768px - 991.98px) - 平板 */
 @media (min-width: 768px) and (max-width: 991.98px) {
   .hero-title {
     font-size: clamp(3rem, 5vw, 3.5rem) !important;
@@ -579,7 +609,7 @@ body, html {
     font-size: clamp(2rem, 4vw, 2.4rem) !important;
   }
   
-  /* 保持三列网格 */
+
   .news-grid {
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 1.5rem;
@@ -590,6 +620,11 @@ body, html {
     gap: 1.5rem;
   }
   
+  .footer-content {
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 1.5rem;
+  }
+  
   .feature-icon {
     width: 65px !important;
     height: 65px !important;
@@ -597,7 +632,6 @@ body, html {
   }
 }
 
-/* 大屏幕设备 (992px - 1199.98px) - 小桌面 */
 @media (min-width: 992px) and (max-width: 1199.98px) {
   .hero-title {
     font-size: clamp(3.5rem, 4vw, 4rem) !important;
@@ -611,7 +645,6 @@ body, html {
     font-size: clamp(2.2rem, 3vw, 2.6rem) !important;
   }
   
-  /* 保持三列网格 */
   .news-grid {
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 1.8rem;
@@ -622,6 +655,11 @@ body, html {
     gap: 1.8rem;
   }
   
+  .footer-content {
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 1.8rem;
+  }
+  
   .feature-icon {
     width: 70px !important;
     height: 70px !important;
@@ -629,7 +667,6 @@ body, html {
   }
 }
 
-/* 超大屏幕设备 (1200px - 1399.98px) - 大桌面 */
 @media (min-width: 1200px) and (max-width: 1399.98px) {
   .hero-title {
     font-size: clamp(4rem, 3.5vw, 4.5rem) !important;
@@ -643,7 +680,7 @@ body, html {
     font-size: clamp(2.4rem, 2.5vw, 2.8rem) !important;
   }
   
-  /* 保持三列网格 */
+
   .news-grid {
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 2rem;
@@ -654,6 +691,11 @@ body, html {
     gap: 2rem;
   }
   
+  .footer-content {
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 2rem;
+  }
+  
   .feature-icon {
     width: 75px !important;
     height: 75px !important;
@@ -661,7 +703,7 @@ body, html {
   }
 }
 
-/* 超超大屏幕设备 (≥1400px) - 超宽屏 */
+
 @media (min-width: 1400px) {
   .hero-title {
     font-size: clamp(4.5rem, 3vw, 5rem) !important;
@@ -675,7 +717,7 @@ body, html {
     font-size: clamp(2.6rem, 2vw, 3rem) !important;
   }
   
-  /* 保持三列网格 */
+
   .news-grid {
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 2.5rem;
@@ -683,6 +725,11 @@ body, html {
   
   .features-grid {
     grid-template-columns: repeat(3, 1fr) !important;
+    gap: 2.5rem;
+  }
+  
+  .footer-content {
+    grid-template-columns: repeat(5, 1fr) !important;
     gap: 2.5rem;
   }
   
