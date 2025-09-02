@@ -1,59 +1,193 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 
+const events = ref([])
+
+const STORAGE_KEYS = {
+  EVENTS: 'sportsync_events'
+}
+
+// localStorage functions
+const saveToLocalStorage = (key, data) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(data))
+  } catch (error) {
+    console.error('Failed to save to localStorage:', error)
+  }
+}
+
+const loadFromLocalStorage = (key, defaultValue = []) => {
+  try {
+    const item = localStorage.getItem(key)
+    return item ? JSON.parse(item) : defaultValue
+  } catch (error) {
+    return defaultValue
+  }
+}
+
+const loadDataFromStorage = () => {
+  const savedEvents = loadFromLocalStorage(STORAGE_KEYS.EVENTS, [])
+  if (savedEvents.length > 0) {
+    events.value = savedEvents
+  }
+}
+
+// Add event
+const addEventToData = (newEvent) => {
+  const eventWithId = {
+    ...newEvent,
+    id: Date.now(),
+    participants: 0,
+    status: 'upcoming',
+    organizer: 'Current User'
+  }
+  
+  events.value.unshift(eventWithId)
+  saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
+}
+
 const sportsNews = ref([
   {
     id: 1,
-    title: 'Weekend Badminton Tournament - Registration Open',
-    summary: 'Join our amateur badminton tournament at the city sports center. Players of all levels welcome!',
+    title: 'Weekend Badminton Tournament',
+    summary: 'Join our amateur badminton tournament. All levels welcome!',
     date: '2024-01-15',
     image: '/badminton.jpeg',
     category: 'Badminton'
   },
   {
     id: 2,
-    title: '3v3 Street Basketball Challenge Recruitment',
-    summary: 'Show off your street ball skills and compete against the city\'s strongest teams',
+    title: '3v3 Basketball Challenge',
+    summary: 'Show off your street ball skills against top teams',
     date: '2024-01-14',
     image: '/basketball.jpeg',
     category: 'Basketball'
   },
   {
     id: 3,
-    title: 'Swimming Club Adds Evening Sessions',
-    summary: 'New 8-10 PM time slots exclusively for working professionals with professional coaching',
+    title: 'Swimming Evening Sessions',
+    summary: 'New evening time slots for working professionals',
     date: '2024-01-13',
     image: '/swimming.jpeg',
     category: 'Swimming'
-  },
-  {
-    id: 4,
-    title: 'Youth Football Academy Spring Enrollment',
-    summary: 'Professional youth coaching team to develop the next generation of football stars',
-    date: '2024-01-12',
-    image: '/football.jpeg',
-    category: 'Football'
-  },
-  {
-    id: 5,
-    title: 'Tennis Club Membership Recruitment',
-    summary: 'Professional indoor tennis courts with latest facilities and expert coaching',
-    date: '2024-01-11',
-    image: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=400&h=250&fit=crop',
-    category: 'Tennis'
-  },
-  {
-    id: 6,
-    title: 'Table Tennis Open Championship - Registration Deadline',
-    summary: 'Only 3 days left to register! Don\'t miss your chance to showcase your skills',
-    date: '2024-01-10',
-    image: '/table tennis.jpeg',
-    category: 'Table Tennis'
   }
 ])
 
-
 const isScrolled = ref(false)
+const showCreateEventForm = ref(false)
+const eventFormData = ref({
+  eventName: '',
+  eventDate: '',
+  eventTime: '',
+  location: '',
+  category: '',
+  maxParticipants: '',
+  ticketPrice: '',
+  description: '',
+  contactEmail: ''
+})
+
+const errors = ref({})
+
+const sportCategories = ref([
+  'Basketball', 'Football', 'Tennis', 'Badminton', 
+  'Swimming', 'Table Tennis', 'Volleyball', 'Running', 
+  'Cycling', 'Fitness', 'Yoga', 'Other'
+])
+
+// Form validation
+const validateForm = () => {
+  const form = eventFormData.value
+  const newErrors = {}
+  
+  if (!form.eventName.trim() || form.eventName.trim().length < 3) {
+    newErrors.eventName = "Event name must be at least 3 characters"
+  }
+  if (!form.eventDate) {
+    newErrors.eventDate = "Please select an event date"
+  }
+  if (!form.eventTime) {
+    newErrors.eventTime = "Please select an event time"
+  }
+  if (!form.location.trim() || form.location.trim().length < 5) {
+    newErrors.location = "Location must be at least 5 characters"
+  }
+  if (!form.category) {
+    newErrors.category = "Please select a sport category"
+  }
+  if (!form.maxParticipants || parseInt(form.maxParticipants) < 1) {
+    newErrors.maxParticipants = "Please enter a valid number of participants"
+  }
+  if (form.ticketPrice === '' || parseFloat(form.ticketPrice) < 0) {
+    newErrors.ticketPrice = "Please enter a valid ticket price (0 or above)"
+  }
+  if (!form.description.trim() || form.description.trim().length < 10) {
+    newErrors.description = "Description must be at least 10 characters"
+  }
+  if (!form.contactEmail.trim() || !form.contactEmail.includes('@')) {
+    newErrors.contactEmail = "Please enter a valid email address"
+  }
+  
+  errors.value = newErrors
+  return Object.keys(newErrors).length === 0
+}
+
+// Form submission
+const submitEventForm = () => {
+  if (validateForm()) {
+    const newEvent = {
+      name: eventFormData.value.eventName,
+      category: eventFormData.value.category,
+      date: eventFormData.value.eventDate,
+      time: eventFormData.value.eventTime,
+      location: eventFormData.value.location,
+      maxParticipants: parseInt(eventFormData.value.maxParticipants),
+      price: parseFloat(eventFormData.value.ticketPrice),
+      description: eventFormData.value.description,
+      contactEmail: eventFormData.value.contactEmail
+    }
+    
+    addEventToData(newEvent)
+    alert('Event created successfully!')
+    resetForm()
+    showCreateEventForm.value = false
+  } else {
+    alert('Please correct the errors in the form')
+  }
+}
+
+// Reset form
+const resetForm = () => {
+  eventFormData.value = {
+    eventName: '',
+    eventDate: '',
+    eventTime: '',
+    location: '',
+    category: '',
+    maxParticipants: '',
+    ticketPrice: '',
+    description: '',
+    contactEmail: ''
+  }
+  errors.value = {}
+}
+
+// Show create form
+const showCreateForm = () => {
+  showCreateEventForm.value = true
+  resetForm()
+}
+
+// Scroll to activities section
+const scrollToActivities = () => {
+  const activitiesSection = document.getElementById('activities')
+  if (activitiesSection) {
+    activitiesSection.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'start'
+    })
+  }
+}
 
 onMounted(() => {
   const handleScroll = () => {
@@ -61,9 +195,17 @@ onMounted(() => {
   }
   window.addEventListener('scroll', handleScroll)
   
-  // 组件卸载时清理事件监听器
+  loadDataFromStorage()
+  
+  const handleBeforeUnload = () => {
+    saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
+  }
+  window.addEventListener('beforeunload', handleBeforeUnload)
+  
   onUnmounted(() => {
     window.removeEventListener('scroll', handleScroll)
+    window.removeEventListener('beforeunload', handleBeforeUnload)
+    saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
   })
 })
 </script>
@@ -97,35 +239,31 @@ onMounted(() => {
         </div>
       </div>
     </nav>
-
-
     <section id="hero" class="hero-section min-vh-100 d-flex align-items-center position-relative overflow-hidden">
       <div class="hero-bg position-absolute w-100 h-100"></div>
       <div class="container text-center position-relative">
         <div class="row justify-content-center">
           <div class="col-lg-8 col-md-10">
-            <h1 class="display-1 fw-bold mb-4 hero-title text-white">
-              <span class="gradient-text">SportSync</span>
+            <h1 class="hero-title mb-4">
+              SportSync
             </h1>
             <p class="lead fs-2 mb-3 hero-subtitle text-white">Connect Through Sports, Reach Your Health Goals</p>
             <p class="fs-5 mb-5 text-white" style="opacity: 0.9;">Discover, Book, Participate - Your One-Stop Sports Platform</p>
             <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
-              <button type="button" class="btn btn-primary btn-lg px-5 py-3 rounded-pill">
+              <button type="button" class="btn btn-primary btn-lg px-5 py-3 rounded-pill" @click="scrollToActivities">
                 <i class="bi bi-calendar-event me-2"></i>Book Now
               </button>
-              <button type="button" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill">
+              <button type="button" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill" @click="showCreateForm">
                 <i class="bi bi-plus-circle me-2"></i>Create Event
               </button>
             </div>
           </div>
         </div>
       </div>
-
       <div class="scroll-indicator position-absolute bottom-0 start-50 translate-middle-x mb-4">
         <div class="scroll-arrow"></div>
       </div>
     </section>
-
     <section id="news" class="py-5 news-section text-white">
       <div class="container py-5">
         <div class="row text-center mb-5">
@@ -134,7 +272,6 @@ onMounted(() => {
             <p class="lead text-light opacity-75">Stay updated with the latest local sports activities and events</p>
           </div>
         </div>
-        
         <div class="news-grid">
           <div 
             v-for="news in sportsNews" 
@@ -163,69 +300,255 @@ onMounted(() => {
         </div>
       </div>
     </section>
-
-    <footer class="bg-dark text-white py-5">
-      <div class="container">
-        <div class="footer-content">
-          <div class="footer-item">
-            <h5 class="fw-bold mb-3">SportSync</h5>
-            <p class="text-muted">Making sports a part of life, connecting every sports enthusiast</p>
-          </div>
-          
-          <div class="footer-item">
-            <h6 class="fw-bold mb-3">Quick Links</h6>
-            <ul class="list-unstyled">
-              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Book Activities</a></li>
-              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Create Event</a></li>
-              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Sports Venues</a></li>
-              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">My Profile</a></li>
-            </ul>
-          </div>
-          
-          <div class="footer-item">
-            <h6 class="fw-bold mb-3">Support</h6>
-            <ul class="list-unstyled">
-              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Help Center</a></li>
-              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Contact Support</a></li>
-              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Feedback</a></li>
-              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">FAQ</a></li>
-            </ul>
-          </div>
-          
-          <div class="footer-item">
-            <h6 class="fw-bold mb-3">Legal</h6>
-            <ul class="list-unstyled">
-              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Privacy Policy</a></li>
-              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Terms of Service</a></li>
-              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">User Agreement</a></li>
-              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Disclaimer</a></li>
-            </ul>
-          </div>
-          
-          <div class="footer-item">
-            <h6 class="fw-bold mb-3">Contact Us</h6>
-            <ul class="list-unstyled">
-              <li class="mb-2 text-muted">
-                <i class="bi bi-envelope me-2"></i>contact@sportsync.com
-              </li>
-              <li class="mb-2 text-muted">
-                <i class="bi bi-telephone me-2"></i>+1 (555) 123-4567
-              </li>
-              <li class="mb-2 text-muted">
-                <i class="bi bi-geo-alt me-2"></i>123 Sports Center, New York, NY 10001
-              </li>
-            </ul>
+    <section id="activities" class="py-5 bg-gradient-light">
+      <div class="container py-5">
+        <div class="row mb-5">
+          <div class="col-12">
+            <div class="text-center mb-4">
+              <h2 class="display-4 fw-bold text-dark">Activity Display</h2>
+              <p class="lead text-muted">Following are the created activities</p>
+            </div>
           </div>
         </div>
-        
-        <hr class="my-4 border-secondary">
-        <div class="row align-items-center">
-          <div class="col-md-6">
-            <p class="text-muted mb-0">&copy; 2024 SportSync. All rights reserved.</p>
+        <div>
+          <div class="row g-4" v-if="events.length > 0">
+            <div v-for="event in events" :key="event.id" class="col-lg-6">
+              <div class="card event-card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <div>
+                    <span class="badge bg-dark text-white rounded-pill">{{ event.category }}</span>
+                    <span class="badge bg-dark text-white rounded-pill ms-2" v-if="event.status === 'upcoming'">Upcoming</span>
+                    <span class="badge bg-dark text-white rounded-pill ms-2" v-else-if="event.status === 'ongoing'">Ongoing</span>
+                  </div>
+                  <small class="text-muted">
+                    <i class="bi bi-calendar me-1"></i>{{ event.date }}
+                  </small>
+                </div>
+                <div class="card-body">
+                  <h5 class="card-title fw-bold">{{ event.name }}</h5>
+                  <p class="card-text text-muted">{{ event.description }}</p>
+                  
+                  <div class="row g-2 mb-3">
+                    <div class="col-6">
+                      <small class="text-muted">
+                        <i class="bi bi-clock me-1"></i>{{ event.time }}
+                      </small>
+                    </div>
+                    <div class="col-6">
+                      <small class="text-muted">
+                        <i class="bi bi-geo-alt me-1"></i>{{ event.location }}
+                      </small>
+                    </div>
+                    <div class="col-6">
+                      <small class="text-muted">
+                        <i class="bi bi-person me-1"></i>{{ event.organizer }}
+                      </small>
+                    </div>
+                    <div class="col-6">
+                      <small class="text-primary fw-bold">
+                        <i class="bi bi-currency-dollar me-1"></i>{{ event.price === 0 ? 'Free' : `$${event.price}` }}
+                      </small>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <div class="text-center">
+                      <small class="text-muted">{{ event.participants }}/{{ event.maxParticipants }} participants</small>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                  <button class="btn btn-primary btn-sm w-100">
+                    <i class="bi bi-person-plus me-1"></i>Join Event
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="col-md-6 text-md-end">
-            <small class="text-muted">Built with Bootstrap & Vue.js</small>
+          <div v-else class="text-center py-5">
+            <i class="bi bi-calendar-x display-1 text-muted"></i>
+            <h3 class="mt-3 text-muted">No Event Data Available</h3>
+            <p class="text-muted">No events have been created yet</p>
           </div>
+        </div>
+      </div>
+    </section>
+    <div v-if="showCreateEventForm" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-plus-circle me-2"></i>Create New Event
+            </h5>
+            <button type="button" class="btn-close btn-close-white" @click="showCreateEventForm = false"></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="submitEventForm">
+              <div class="row">
+                <!-- Event Name -->
+                <div class="col-md-6 mb-3">
+                  <label for="eventName" class="form-label fw-bold">Event Name <span class="text-danger">*</span></label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    id="eventName" 
+                    v-model="eventFormData.eventName"
+                    :class="{ 'is-invalid': errors.eventName }"
+                    placeholder="Enter event name"
+                  >
+                  <div v-if="errors.eventName" class="invalid-feedback">{{ errors.eventName }}</div>
+                </div>
+
+                <!-- Sport Category -->
+                <div class="col-md-6 mb-3">
+                  <label for="category" class="form-label fw-bold">Sport Category <span class="text-danger">*</span></label>
+                  <select 
+                    class="form-select" 
+                    id="category" 
+                    v-model="eventFormData.category"
+                    :class="{ 'is-invalid': errors.category }"
+                  >
+                    <option value="">Select sport category</option>
+                    <option v-for="category in sportCategories" :key="category" :value="category">
+                      {{ category }}
+                    </option>
+                  </select>
+                  <div v-if="errors.category" class="invalid-feedback">{{ errors.category }}</div>
+                </div>
+
+                <!-- Event Date -->
+                <div class="col-md-6 mb-3">
+                  <label for="eventDate" class="form-label fw-bold">Event Date <span class="text-danger">*</span></label>
+                  <input 
+                    type="date" 
+                    class="form-control" 
+                    id="eventDate" 
+                    v-model="eventFormData.eventDate"
+                    :class="{ 'is-invalid': errors.eventDate }"
+                  >
+                  <div v-if="errors.eventDate" class="invalid-feedback">{{ errors.eventDate }}</div>
+                </div>
+
+                <!-- Event Time -->
+                <div class="col-md-6 mb-3">
+                  <label for="eventTime" class="form-label fw-bold">Event Time <span class="text-danger">*</span></label>
+                  <input 
+                    type="time" 
+                    class="form-control" 
+                    id="eventTime" 
+                    v-model="eventFormData.eventTime"
+                    :class="{ 'is-invalid': errors.eventTime }"
+                  >
+                  <div v-if="errors.eventTime" class="invalid-feedback">{{ errors.eventTime }}</div>
+                </div>
+
+                <!-- Event Location -->
+                <div class="col-12 mb-3">
+                  <label for="location" class="form-label fw-bold">Event Location <span class="text-danger">*</span></label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    id="location" 
+                    v-model="eventFormData.location"
+                    :class="{ 'is-invalid': errors.location }"
+                    placeholder="Enter detailed address"
+                  >
+                  <div v-if="errors.location" class="invalid-feedback">{{ errors.location }}</div>
+                </div>
+
+                <!-- Max Participants -->
+                <div class="col-md-6 mb-3">
+                  <label for="maxParticipants" class="form-label fw-bold">Max Participants <span class="text-danger">*</span></label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    id="maxParticipants" 
+                    v-model="eventFormData.maxParticipants"
+                    :class="{ 'is-invalid': errors.maxParticipants }"
+                    placeholder="Enter number of participants"
+                    min="1"
+                    max="1000"
+                  >
+                  <div v-if="errors.maxParticipants" class="invalid-feedback">{{ errors.maxParticipants }}</div>
+                </div>
+
+                <!-- Ticket Price -->
+                <div class="col-md-6 mb-3">
+                  <label for="ticketPrice" class="form-label fw-bold">Ticket Price ($) <span class="text-danger">*</span></label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    id="ticketPrice" 
+                    v-model="eventFormData.ticketPrice"
+                    :class="{ 'is-invalid': errors.ticketPrice }"
+                    placeholder="0.00"
+                    min="0"
+                    max="10000"
+                    step="0.01"
+                  >
+                  <div v-if="errors.ticketPrice" class="invalid-feedback">{{ errors.ticketPrice }}</div>
+                  <div class="form-text">Enter 0 for free events</div>
+                </div>
+
+                <!-- Contact Email -->
+                <div class="col-12 mb-3">
+                  <label for="contactEmail" class="form-label fw-bold">Contact Email <span class="text-danger">*</span></label>
+                  <input 
+                    type="email" 
+                    class="form-control" 
+                    id="contactEmail" 
+                    v-model="eventFormData.contactEmail"
+                    :class="{ 'is-invalid': errors.contactEmail }"
+                    placeholder="example@email.com"
+                  >
+                  <div v-if="errors.contactEmail" class="invalid-feedback">{{ errors.contactEmail }}</div>
+                </div>
+
+                <!-- Event Description -->
+                <div class="col-12 mb-3">
+                  <label for="description" class="form-label fw-bold">Event Description <span class="text-danger">*</span></label>
+                  <textarea 
+                    class="form-control" 
+                    id="description" 
+                    rows="4" 
+                    v-model="eventFormData.description"
+                    :class="{ 'is-invalid': errors.description }"
+                    placeholder="Please describe the event details, rules, and important notes"
+                  ></textarea>
+                  <div v-if="errors.description" class="invalid-feedback">{{ errors.description }}</div>
+                  <div class="form-text">{{ eventFormData.description.length }}/1000 characters</div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="resetForm">
+              <i class="bi bi-arrow-clockwise me-2"></i>Reset Form
+            </button>
+            <button type="button" class="btn btn-outline-secondary" @click="showCreateEventForm = false">
+              Cancel
+            </button>
+            <button type="button" class="btn btn-primary" @click="submitEventForm">
+              <i class="bi bi-check-circle me-2"></i>Create Event
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="bg-dark text-white py-4">
+      <div class="container">
+        <div class="text-center">
+          <h5 class="fw-bold mb-2">SportSync</h5>
+          <p class="text-muted mb-3">Your Sports Activity Platform</p>
+          <div class="mb-3">
+            <span class="text-muted me-3">
+              <i class="bi bi-envelope me-1"></i>contact@sportsync.com
+            </span>
+            <span class="text-muted">
+              <i class="bi bi-telephone me-1"></i>+1 (555) 123-4567
+            </span>
+          </div>
+          <p class="text-muted mb-0">&copy; 2024 SportSync. All rights reserved.</p>
         </div>
       </div>
     </footer>
@@ -241,15 +564,12 @@ onMounted(() => {
 }
 
 body, html {
-  margin: 0;
-  padding: 0;
   overflow-x: hidden;
 }
 
 .navbar {
   background: rgba(0, 0, 0, 0.1) !important;
   backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
 }
 
 .navbar-scrolled {
@@ -258,11 +578,9 @@ body, html {
 }
 
 .brand-text {
-  background: linear-gradient(45deg, #fff, #f0f0f0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #fff !important;
   font-size: 1.5rem;
+  font-weight: bold;
 }
 
 .hero-section {
@@ -282,12 +600,9 @@ body, html {
 
 .hero-title {
   font-size: clamp(3rem, 8vw, 6rem);
-}
-
-.gradient-text {
-  color: white !important;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+  color: #ffffff !important;
   font-weight: 800;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
 }
 
 .hero-subtitle {
@@ -300,12 +615,9 @@ body, html {
   color: white !important;
   border: none !important;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
   background: #1a1a1a !important;
   color: white !important;
   border: none !important;
@@ -324,7 +636,6 @@ body, html {
 .btn-outline-light:hover {
   background: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 255, 255, 0.5);
-  transform: translateY(-2px);
 }
 
 .scroll-indicator {
@@ -338,17 +649,9 @@ body, html {
   border-top: none;
   border-left: none;
   transform: rotate(45deg);
-  animation: bounce 2s infinite;
-}
-
-@keyframes bounce {
-  0%, 20%, 50%, 80%, 100% { transform: translateY(0) rotate(45deg); }
-  40% { transform: translateY(-10px) rotate(45deg); }
-  60% { transform: translateY(-5px) rotate(45deg); }
 }
 
 .news-card {
-  transition: all 0.3s ease;
   border-radius: 20px !important;
   overflow: hidden;
   background: #ffffff !important;
@@ -356,31 +659,19 @@ body, html {
   box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
 }
 
-.news-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 20px 50px rgba(255, 255, 255, 0.2) !important;
-}
-
 .news-image {
-  transition: transform 0.3s ease;
   width: 100% !important;
   height: 250px !important;
   object-fit: cover !important;
   object-position: center !important;
 }
 
-.news-card:hover .news-image {
-  transform: scale(1.1);
-}
-
-/* 统一内容区域高度 */
 .news-content {
   height: 180px !important;
   padding: 1.5rem !important;
   overflow: hidden;
 }
 
-/* 基础新闻网格布局 */
 .news-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -392,262 +683,24 @@ body, html {
   width: 100%;
 }
 
-/* 新闻区域纯黑色背景 */
 .news-section {
   background: #000000 !important;
 }
 
-/* 基础底栏布局 - 固定一行五列 */
-.footer-content {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 2rem;
-  width: 100%;
-}
-
-.footer-item {
-  width: 100%;
-}
-
-@media (max-width: 575.98px) {
-  .hero-title {
-    font-size: clamp(2rem, 8vw, 2.5rem) !important;
-  }
-  
-  .hero-subtitle {
-    font-size: clamp(0.9rem, 4vw, 1.1rem) !important;
-  }
-  
-  .display-4 {
-    font-size: clamp(1.5rem, 6vw, 2rem) !important;
-  }
-
+@media (max-width: 768px) {
   .news-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-columns: repeat(3, 1fr);
     gap: 0.5rem;
   }
   
   .news-content {
-    height: 140px !important;
-    padding: 1rem !important;
-    overflow: hidden;
-  }
-  
-  .news-image {
-    height: 180px !important;
-  }
-  
-  .footer-content {
-    grid-template-columns: repeat(5, 1fr) !important;
-    gap: 0.5rem;
-  }
-  
-  .news-card {
-    font-size: 0.8rem;
-  }
-  
-  .news-card .card-title {
-    font-size: 0.9rem !important;
-  }
-  
-  .news-card .card-text {
-    font-size: 0.75rem !important;
-  }
-  
-  .btn {
-    padding: 8px 16px;
-    font-size: 0.9rem;
+    height: 140px;
+    padding: 1rem;
   }
   
   .container {
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-  }
-  
-  .footer-item h5,
-  .footer-item h6 {
-    font-size: 0.9rem !important;
-  }
-  
-  .footer-item p,
-  .footer-item ul li {
-    font-size: 0.75rem !important;
-  }
-}
-
-@media (min-width: 576px) and (max-width: 767.98px) {
-  .hero-title {
-    font-size: clamp(2.5rem, 6vw, 3rem) !important;
-  }
-  
-  .hero-subtitle {
-    font-size: clamp(1rem, 3vw, 1.2rem) !important;
-  }
-  
-  .display-4 {
-    font-size: clamp(1.8rem, 5vw, 2.2rem) !important;
-  }
-  
-  .news-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 1rem;
-  }
-  
-  .news-content {
-    height: 160px !important;
-    padding: 1.2rem !important;
-    overflow: hidden;
-  }
-  
-  .news-image {
-    height: 200px !important;
-  }
-  
-  .footer-content {
-    grid-template-columns: repeat(5, 1fr) !important;
-    gap: 1rem;
-  }
-  
-  .btn {
-    padding: 10px 20px;
-    font-size: 0.95rem;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 991.98px) {
-  .hero-title {
-    font-size: clamp(3rem, 5vw, 3.5rem) !important;
-  }
-  
-  .hero-subtitle {
-    font-size: clamp(1.1rem, 2.5vw, 1.3rem) !important;
-  }
-  
-  .display-4 {
-    font-size: clamp(2rem, 4vw, 2.4rem) !important;
-  }
-  
-  .news-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 1.5rem;
-  }
-  
-  .news-content {
-    height: 170px !important;
-    padding: 1.3rem !important;
-    overflow: hidden;
-  }
-  
-  .news-image {
-    height: 220px !important;
-  }
-  
-  .footer-content {
-    grid-template-columns: repeat(5, 1fr) !important;
-    gap: 1.5rem;
-  }
-}
-
-@media (min-width: 992px) and (max-width: 1199.98px) {
-  .hero-title {
-    font-size: clamp(3.5rem, 4vw, 4rem) !important;
-  }
-  
-  .hero-subtitle {
-    font-size: clamp(1.2rem, 2vw, 1.4rem) !important;
-  }
-  
-  .display-4 {
-    font-size: clamp(2.2rem, 3vw, 2.6rem) !important;
-  }
-  
-  .news-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 1.8rem;
-  }
-  
-  .news-content {
-    height: 175px !important;
-    padding: 1.4rem !important;
-    overflow: hidden;
-  }
-  
-  .news-image {
-    height: 240px !important;
-  }
-  
-  .footer-content {
-    grid-template-columns: repeat(5, 1fr) !important;
-    gap: 1.8rem;
-  }
-}
-
-@media (min-width: 1200px) and (max-width: 1399.98px) {
-  .hero-title {
-    font-size: clamp(4rem, 3.5vw, 4.5rem) !important;
-  }
-  
-  .hero-subtitle {
-    font-size: clamp(1.3rem, 1.8vw, 1.5rem) !important;
-  }
-  
-  .display-4 {
-    font-size: clamp(2.4rem, 2.5vw, 2.8rem) !important;
-  }
-  
-  .news-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 2rem;
-  }
-  
-  .news-content {
-    height: 180px !important;
-    padding: 1.5rem !important;
-    overflow: hidden;
-  }
-  
-  .news-image {
-    height: 250px !important;
-  }
-  
-  .footer-content {
-    grid-template-columns: repeat(5, 1fr) !important;
-    gap: 2rem;
-  }
-}
-
-
-@media (min-width: 1400px) {
-  .hero-title {
-    font-size: clamp(4.5rem, 3vw, 5rem) !important;
-  }
-  
-  .hero-subtitle {
-    font-size: clamp(1.4rem, 1.5vw, 1.6rem) !important;
-  }
-  
-  .display-4 {
-    font-size: clamp(2.6rem, 2vw, 3rem) !important;
-  }
-  
-  .news-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 2.5rem;
-  }
-  
-  .news-content {
-    height: 190px !important;
-    padding: 1.6rem !important;
-    overflow: hidden;
-  }
-  
-  .news-image {
-    height: 270px !important;
-  }
-  
-  .footer-content {
-    grid-template-columns: repeat(5, 1fr) !important;
-    gap: 2.5rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
 }
 
@@ -655,4 +708,95 @@ html {
   scroll-behavior: smooth;
 }
 
+.is-invalid {
+  border-color: #dc3545 !important;
+}
+
+.invalid-feedback {
+  width: 100%;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #dc3545 !important;
+  display: block !important;
+}
+
+.modal-content {
+  border-radius: 15px;
+  border: none;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+@media (max-width: 768px) {
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+  
+  .modal-body {
+    padding: 1rem;
+  }
+  
+  .form-control,
+  .form-select {
+    font-size: 16px; 
+  }
+}
+
+.bg-gradient-light {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.event-card {
+  border: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.event-card .card-header {
+  background: linear-gradient(45deg, #f8f9fa, #ffffff);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.badge {
+  font-size: 0.75rem;
+  padding: 0.5em 0.75em;
+}
+
+@media (max-width: 768px) {
+  .event-card .card-body {
+    padding: 1rem;
+  }
+  
+  .display-4 {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .event-card .row.g-2 .col-6 {
+    font-size: 0.875rem;
+  }
+  
+  .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+}
+
+i.display-1 {
+  font-size: 4rem;
+  opacity: 0.3;
+}
 </style>
