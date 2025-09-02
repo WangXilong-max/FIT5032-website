@@ -1,8 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-
 const events = ref([])
-
 const STORAGE_KEYS = {
   EVENTS: 'sportsync_events'
 }
@@ -272,11 +270,11 @@ onMounted(() => {
             <p class="lead text-light opacity-75">Stay updated with the latest local sports activities and events</p>
           </div>
         </div>
-        <div class="news-grid">
+        <div class="row g-4">
           <div 
             v-for="news in sportsNews" 
             :key="news.id" 
-            class="news-item"
+            class="col-12 col-md-6 col-lg-4"
           >
             <div class="card news-card">
               <div class="position-relative overflow-hidden">
@@ -372,10 +370,11 @@ onMounted(() => {
         </div>
       </div>
     </section>
-    <div v-if="showCreateEventForm" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    
+    <div v-if="showCreateEventForm" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.0);">
       <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
-          <div class="modal-header bg-primary text-white">
+          <div class="modal-header text-white" style="background-color: #000000;">
             <h5 class="modal-title">
               <i class="bi bi-plus-circle me-2"></i>Create New Event
             </h5>
@@ -672,27 +671,13 @@ body, html {
   overflow: hidden;
 }
 
-.news-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
-  width: 100%;
-}
 
-.news-item {
-  width: 100%;
-}
 
 .news-section {
   background: #000000 !important;
 }
 
 @media (max-width: 768px) {
-  .news-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
-  }
-  
   .news-content {
     height: 140px;
     padding: 1rem;
@@ -701,6 +686,38 @@ body, html {
   .container {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
+  }
+  
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+  
+  .modal-body {
+    padding: 1rem;
+  }
+  
+  .form-control,
+  .form-select {
+    font-size: 16px; 
+  }
+  
+  .event-card .card-body {
+    padding: 1rem;
+  }
+  
+  .display-4 {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .event-card .row.g-2 .col-6 {
+    font-size: 0.875rem;
+  }
+  
+  .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
   }
 }
 
@@ -738,20 +755,7 @@ html {
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
-@media (max-width: 768px) {
-  .modal-dialog {
-    margin: 0.5rem;
-  }
-  
-  .modal-body {
-    padding: 1rem;
-  }
-  
-  .form-control,
-  .form-select {
-    font-size: 16px; 
-  }
-}
+
 
 .bg-gradient-light {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -774,26 +778,9 @@ html {
   padding: 0.5em 0.75em;
 }
 
-@media (max-width: 768px) {
-  .event-card .card-body {
-    padding: 1rem;
-  }
-  
-  .display-4 {
-    font-size: 2rem;
-  }
-}
 
-@media (max-width: 576px) {
-  .event-card .row.g-2 .col-6 {
-    font-size: 0.875rem;
-  }
-  
-  .btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-  }
-}
+
+
 
 i.display-1 {
   font-size: 4rem;
