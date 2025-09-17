@@ -1,42 +1,28 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
+import NavigationBar from './components/NavigationBar.vue'
+import EventCard from './components/EventCard.vue'
+import AuthModal from './components/AuthModal.vue'
+import AdminPanel from './components/AdminPanel.vue'
+import CreateEventModal from './components/CreateEventModal.vue'
+import { sportsNews, sportCategories } from './data/sportsData.js'
+import { sanitizeInput, validateNumeric } from './utils/security.js'
+import { STORAGE_KEYS, saveToLocalStorage, loadFromLocalStorage } from './utils/storage.js'
 
-// Auth state
+// App state
 const currentUser = ref(null)
 const showAuthModal = ref(false)
 const authMode = ref('login')
-
-// Auth data
-const authForm = ref({ username: '', password: '', role: 'user' })
 const users = ref([])
-
-// App state
 const events = ref([])
-const STORAGE_KEYS = {
-  EVENTS: 'sportsync_events',
-  USERS: 'sportsync_users',
-  CURRENT_USER: 'sportsync_current_user'
-}
+const isScrolled = ref(false)
+const showCreateEventForm = ref(false)
 
-// localStorage functions
-const saveToLocalStorage = (key, data) => {
-  try {
-    localStorage.setItem(key, JSON.stringify(data))
-  } catch (error) {
-    console.error('Failed to save to localStorage:', error)
-  }
-}
+// Computed properties
+const isAdmin = computed(() => currentUser.value?.role === 'admin')
+const isUser = computed(() => currentUser.value?.role === 'user')
 
-const loadFromLocalStorage = (key, defaultValue = []) => {
-  try {
-    const item = localStorage.getItem(key)
-    return item ? JSON.parse(item) : defaultValue
-  } catch (error) {
-    return defaultValue
-  }
-}
-
-// Auth functions
+// Data loading
 const loadDataFromStorage = () => {
   const savedEvents = loadFromLocalStorage(STORAGE_KEYS.EVENTS, [])
   const savedUsers = loadFromLocalStorage(STORAGE_KEYS.USERS, [])
@@ -46,37 +32,53 @@ const loadDataFromStorage = () => {
     events.value = savedEvents.map(event => ({
       ...event,
       ratings: event.ratings || [],
-      averageRating: event.averageRating || 0
+      averageRating: event.averageRating || 0,
+      organizerId: event.organizerId || null
     }))
   }
   if (savedUsers.length > 0) users.value = savedUsers
   if (savedCurrentUser) currentUser.value = savedCurrentUser
 }
 
-const login = () => {
-  const user = users.value.find(u => u.username === authForm.value.username && u.password === authForm.value.password)
+// Auth functions
+const login = (formData) => {
+  const username = sanitizeInput(formData.username)
+  const user = users.value.find(u => u.username === username && u.password === formData.password)
   if (user) {
     currentUser.value = user
     saveToLocalStorage(STORAGE_KEYS.CURRENT_USER, user)
     showAuthModal.value = false
-    authForm.value = { username: '', password: '', role: 'user' }
   } else {
     alert('Invalid credentials')
   }
 }
 
-const register = () => {
-  if (users.value.find(u => u.username === authForm.value.username)) {
+const register = (formData) => {
+  const username = sanitizeInput(formData.username)
+  if (!username || username.length < 3) {
+    alert('Username must be at least 3 characters')
+    return
+  }
+  if (!formData.password || formData.password.length < 6) {
+    alert('Password must be at least 6 characters')
+    return
+  }
+  if (users.value.find(u => u.username === username)) {
     alert('Username already exists')
     return
   }
-  const newUser = { id: Date.now(), ...authForm.value }
+  
+  const newUser = { 
+    id: Date.now(), 
+    username: username,
+    password: formData.password,
+    role: formData.role 
+  }
   users.value.push(newUser)
   saveToLocalStorage(STORAGE_KEYS.USERS, users.value)
   currentUser.value = newUser
   saveToLocalStorage(STORAGE_KEYS.CURRENT_USER, newUser)
   showAuthModal.value = false
-  authForm.value = { username: '', password: '', role: 'user' }
 }
 
 const logout = () => {
@@ -84,223 +86,108 @@ const logout = () => {
   localStorage.removeItem(STORAGE_KEYS.CURRENT_USER)
 }
 
-const isAdmin = computed(() => currentUser.value?.role === 'admin')
-const isUser = computed(() => currentUser.value?.role === 'user')
-
-// Add event
+// Event functions
 const addEventToData = (newEvent) => {
   const eventWithId = {
     ...newEvent,
     id: Date.now(),
     participants: 0,
     status: 'upcoming',
-    organizer: 'Current User',
+    organizer: currentUser.value.username,
+    organizerId: currentUser.value.id,
     ratings: [],
     averageRating: 0
   }
-  
   events.value.unshift(eventWithId)
   saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
 }
 
-const rateEvent = (eventId, rating) => {
-  if (!currentUser.value) {
-    alert('Please login to rate events')
+const deleteEvent = (eventId) => {
+  const event = events.value.find(e => e.id === eventId)
+  if (!event) return
+  
+  const canDelete = isAdmin.value || 
+                   (isUser.value && event.organizerId === currentUser.value.id) ||
+                   (isUser.value && event.organizer === currentUser.value.username)
+  
+  if (!canDelete) {
+    alert('You can only delete your own events')
     return
   }
+  
+  if (confirm('Are you sure you want to delete this event?')) {
+    events.value = events.value.filter(e => e.id !== eventId)
+    saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
+  }
+}
+
+const rateEvent = (eventId, rating) => {
+  if (!currentUser.value || !validateNumeric(rating, 1, 5)) return
   
   const event = events.value.find(e => e.id === eventId)
   if (!event) return
   
   if (!event.ratings) event.ratings = []
-  
   const existingRating = event.ratings.find(r => r.userId === currentUser.value.id)
   
   if (existingRating) {
-    existingRating.rating = rating
+    existingRating.rating = parseInt(rating)
   } else {
     event.ratings.push({
       userId: currentUser.value.id,
-      username: currentUser.value.username,
-      rating: rating
+      username: sanitizeInput(currentUser.value.username),
+      rating: parseInt(rating),
+      timestamp: Date.now()
     })
   }
   
   event.averageRating = event.ratings.reduce((sum, r) => sum + r.rating, 0) / event.ratings.length
   saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
-  
-  console.log('Rating updated:', { eventId, rating, averageRating: event.averageRating })
 }
 
-const getUserRating = (event) => {
-  if (!currentUser.value || !event.ratings) return 0
-  const userRating = event.ratings.find(r => r.userId === currentUser.value.id)
-  return userRating ? userRating.rating : 0
+// Utility functions
+const toggleAuthMode = () => {
+  authMode.value = authMode.value === 'login' ? 'register' : 'login'
 }
 
-const sportsNews = ref([
-  {
-    id: 1,
-    title: 'Weekend Badminton Tournament',
-    summary: 'Join our amateur badminton tournament. All levels welcome!',
-    date: '2024-01-15',
-    image: '/badminton.jpeg',
-    category: 'Badminton'
-  },
-  {
-    id: 2,
-    title: '3v3 Basketball Challenge',
-    summary: 'Show off your street ball skills against top teams',
-    date: '2024-01-14',
-    image: '/basketball.jpeg',
-    category: 'Basketball'
-  },
-  {
-    id: 3,
-    title: 'Swimming Evening Sessions',
-    summary: 'New evening time slots for working professionals',
-    date: '2024-01-13',
-    image: '/swimming.jpeg',
-    category: 'Swimming'
-  }
-])
-
-const isScrolled = ref(false)
-const showCreateEventForm = ref(false)
-const eventFormData = ref({
-  eventName: '',
-  eventDate: '',
-  eventTime: '',
-  location: '',
-  category: '',
-  maxParticipants: '',
-  ticketPrice: '',
-  description: '',
-  contactEmail: ''
-})
-
-const errors = ref({})
-
-const sportCategories = ref([
-  'Basketball', 'Football', 'Tennis', 'Badminton', 
-  'Swimming', 'Table Tennis', 'Volleyball', 'Running', 
-  'Cycling', 'Fitness', 'Yoga', 'Other'
-])
-
-// Form validation
-const validateForm = () => {
-  const form = eventFormData.value
-  const newErrors = {}
-  
-  if (!form.eventName.trim() || form.eventName.trim().length < 3) {
-    newErrors.eventName = "Event name must be at least 3 characters"
-  }
-  if (!form.eventDate) {
-    newErrors.eventDate = "Please select an event date"
-  }
-  if (!form.eventTime) {
-    newErrors.eventTime = "Please select an event time"
-  }
-  if (!form.location.trim() || form.location.trim().length < 5) {
-    newErrors.location = "Location must be at least 5 characters"
-  }
-  if (!form.category) {
-    newErrors.category = "Please select a sport category"
-  }
-  if (!form.maxParticipants || parseInt(form.maxParticipants) < 1) {
-    newErrors.maxParticipants = "Please enter a valid number of participants"
-  }
-  if (form.ticketPrice === '' || parseFloat(form.ticketPrice) < 0) {
-    newErrors.ticketPrice = "Please enter a valid ticket price (0 or above)"
-  }
-  if (!form.description.trim() || form.description.trim().length < 10) {
-    newErrors.description = "Description must be at least 10 characters"
-  }
-  if (!form.contactEmail.trim() || !form.contactEmail.includes('@')) {
-    newErrors.contactEmail = "Please enter a valid email address"
-  }
-  
-  errors.value = newErrors
-  return Object.keys(newErrors).length === 0
-}
-
-// Form submission
-const submitEventForm = () => {
-  if (validateForm()) {
-    const newEvent = {
-      name: eventFormData.value.eventName,
-      category: eventFormData.value.category,
-      date: eventFormData.value.eventDate,
-      time: eventFormData.value.eventTime,
-      location: eventFormData.value.location,
-      maxParticipants: parseInt(eventFormData.value.maxParticipants),
-      price: parseFloat(eventFormData.value.ticketPrice),
-      description: eventFormData.value.description,
-      contactEmail: eventFormData.value.contactEmail
-    }
-    
-    addEventToData(newEvent)
-    alert('Event created successfully!')
-    resetForm()
-    showCreateEventForm.value = false
-  } else {
-    alert('Please correct the errors in the form')
+const clearAllEvents = () => {
+  if (confirm('Are you sure you want to clear all events?')) {
+    events.value = []
+    saveToLocalStorage(STORAGE_KEYS.EVENTS, [])
   }
 }
 
-// Reset form
-const resetForm = () => {
-  eventFormData.value = {
-    eventName: '',
-    eventDate: '',
-    eventTime: '',
-    location: '',
-    category: '',
-    maxParticipants: '',
-    ticketPrice: '',
-    description: '',
-    contactEmail: ''
-  }
-  errors.value = {}
-}
-
-// Show create form
 const showCreateForm = () => {
   if (!currentUser.value) {
     showAuthModal.value = true
     return
   }
   showCreateEventForm.value = true
-  resetForm()
 }
 
-// Scroll to activities section
+const createEvent = (eventData) => {
+  addEventToData(eventData)
+  alert('Event created successfully!')
+  showCreateEventForm.value = false
+}
+
 const scrollToActivities = () => {
   const activitiesSection = document.getElementById('activities')
   if (activitiesSection) {
-    activitiesSection.scrollIntoView({ 
-      behavior: 'smooth',
-      block: 'start'
-    })
+    activitiesSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 }
 
+// Lifecycle
 onMounted(() => {
   const handleScroll = () => {
     isScrolled.value = window.scrollY > 50
   }
   window.addEventListener('scroll', handleScroll)
-  
   loadDataFromStorage()
-  
-  const handleBeforeUnload = () => {
-    saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
-  }
-  window.addEventListener('beforeunload', handleBeforeUnload)
   
   onUnmounted(() => {
     window.removeEventListener('scroll', handleScroll)
-    window.removeEventListener('beforeunload', handleBeforeUnload)
     saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
   })
 })
@@ -308,50 +195,20 @@ onMounted(() => {
 
 <template>
   <div id="app">
+    <NavigationBar 
+      :current-user="currentUser"
+      :is-admin="isAdmin"
+      :is-scrolled="isScrolled"
+      @logout="logout"
+      @show-auth="showAuthModal = true"
+    />
 
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" :class="{ 'navbar-scrolled': isScrolled }">
-      <div class="container">
-        <a class="navbar-brand fw-bold" href="#">
-          <span class="brand-text">SportSync</span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="#hero">Home</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#news">Sports News</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#activities">Book Activities</a>
-            </li>
-            <li class="nav-item" v-if="isAdmin">
-              <a class="nav-link" href="#admin">Admin Panel</a>
-            </li>
-            <li class="nav-item" v-if="currentUser">
-              <span class="nav-link">Hello, {{ currentUser.username }} ({{ currentUser.role }})</span>
-            </li>
-            <li class="nav-item" v-if="currentUser">
-              <button class="btn btn-outline-light btn-sm" @click="logout">Logout</button>
-            </li>
-            <li class="nav-item" v-if="!currentUser">
-              <button class="btn btn-outline-light btn-sm" @click="showAuthModal = true">Login</button>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
     <section id="hero" class="hero-section min-vh-100 d-flex align-items-center position-relative overflow-hidden">
       <div class="hero-bg position-absolute w-100 h-100"></div>
       <div class="container text-center position-relative">
         <div class="row justify-content-center">
           <div class="col-lg-8 col-md-10">
-            <h1 class="hero-title mb-4">
-              SportSync
-            </h1>
+            <h1 class="hero-title mb-4">SportSync</h1>
             <p class="lead fs-2 mb-3 hero-subtitle text-white">Connect Through Sports, Reach Your Health Goals</p>
             <p class="fs-5 mb-5 text-white" style="opacity: 0.9;">Discover, Book, Participate - Your One-Stop Sports Platform</p>
             <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
@@ -369,6 +226,7 @@ onMounted(() => {
         <div class="scroll-arrow"></div>
       </div>
     </section>
+
     <section id="news" class="py-5 news-section text-white">
       <div class="container py-5">
         <div class="row text-center mb-5">
@@ -378,11 +236,7 @@ onMounted(() => {
           </div>
         </div>
         <div class="row g-4">
-          <div 
-            v-for="news in sportsNews" 
-            :key="news.id" 
-            class="col-12 col-md-6 col-lg-4"
-          >
+          <div v-for="news in sportsNews" :key="news.id" class="col-12 col-md-6 col-lg-4">
             <div class="card news-card">
               <div class="position-relative overflow-hidden">
                 <img :src="news.image" :alt="news.title" class="card-img-top news-image">
@@ -405,6 +259,7 @@ onMounted(() => {
         </div>
       </div>
     </section>
+
     <section id="activities" class="py-5 bg-gradient-light">
       <div class="container py-5">
         <div class="row mb-5">
@@ -418,84 +273,15 @@ onMounted(() => {
         <div>
           <div class="row g-4" v-if="events.length > 0">
             <div v-for="event in events" :key="event.id" class="col-lg-6">
-              <div class="card event-card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                  <div>
-                    <span class="badge bg-dark text-white rounded-pill">{{ event.category }}</span>
-                    <span class="badge bg-dark text-white rounded-pill ms-2" v-if="event.status === 'upcoming'">Upcoming</span>
-                    <span class="badge bg-dark text-white rounded-pill ms-2" v-else-if="event.status === 'ongoing'">Ongoing</span>
-                  </div>
-                  <small class="text-muted">
-                    <i class="bi bi-calendar me-1"></i>{{ event.date }}
-                  </small>
-                </div>
-                <div class="card-body">
-                  <h5 class="card-title fw-bold">{{ event.name }}</h5>
-                  <p class="card-text text-muted">{{ event.description }}</p>
-                  
-                  <div class="row g-2 mb-3">
-                    <div class="col-6">
-                      <small class="text-muted">
-                        <i class="bi bi-clock me-1"></i>{{ event.time }}
-                      </small>
-                    </div>
-                    <div class="col-6">
-                      <small class="text-muted">
-                        <i class="bi bi-geo-alt me-1"></i>{{ event.location }}
-                      </small>
-                    </div>
-                    <div class="col-6">
-                      <small class="text-muted">
-                        <i class="bi bi-person me-1"></i>{{ event.organizer }}
-                      </small>
-                    </div>
-                    <div class="col-6">
-                      <small class="text-primary fw-bold">
-                        <i class="bi bi-currency-dollar me-1"></i>{{ event.price === 0 ? 'Free' : `$${event.price}` }}
-                      </small>
-                    </div>
-                  </div>
-                  <div class="mb-3">
-                    <div class="text-center">
-                      <small class="text-muted">{{ event.participants }}/{{ event.maxParticipants }} participants</small>
-                    </div>
-                  </div>
-                  
-                  <div class="mb-3" v-if="event.ratings && event.ratings.length > 0">
-                    <div class="d-flex align-items-center justify-content-between">
-                      <div class="d-flex align-items-center">
-                        <span class="me-2">
-                          <i v-for="n in 5" :key="n" 
-                             :class="n <= Math.round(event.averageRating) ? 'bi bi-star-fill text-warning' : 'bi bi-star text-muted'"
-                             style="font-size: 0.8rem;"></i>
-                        </span>
-                        <small class="text-muted">{{ event.averageRating.toFixed(1) }}</small>
-                      </div>
-                      <small class="text-muted">({{ event.ratings.length }} reviews)</small>
-                    </div>
-                  </div>
-                  
-                  <div class="mb-3" v-if="currentUser">
-                    <div class="text-center">
-                      <small class="text-muted d-block mb-1">Rate this event:</small>
-                      <div>
-                        <i v-for="n in 5" :key="n" 
-                           :class="n <= getUserRating(event) ? 'bi bi-star-fill text-warning' : 'bi bi-star text-muted'"
-                           @click="rateEvent(event.id, n)"
-                           style="cursor: pointer; font-size: 1rem; margin: 0 1px;"></i>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="card-footer bg-transparent">
-                  <button class="btn btn-primary btn-sm w-100" v-if="currentUser" :disabled="!isUser">
-                    <i class="bi bi-person-plus me-1"></i>Join Event
-                  </button>
-                  <button class="btn btn-secondary btn-sm w-100" v-if="!currentUser" @click="showAuthModal = true">
-                    <i class="bi bi-lock me-1"></i>Login to Join
-                  </button>
-                </div>
-              </div>
+              <EventCard 
+                :event="event"
+                :current-user="currentUser"
+                :is-user="isUser"
+                :is-admin="isAdmin"
+                @delete="deleteEvent"
+                @rate="rateEvent"
+                @login-required="showAuthModal = true"
+              />
             </div>
           </div>
           <div v-else class="text-center py-5">
@@ -506,262 +292,29 @@ onMounted(() => {
         </div>
       </div>
     </section>
-    
-    <div v-if="showCreateEventForm" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.0);">
-      <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-          <div class="modal-header text-white" style="background-color: #000000;">
-            <h5 class="modal-title">
-              <i class="bi bi-plus-circle me-2"></i>Create New Event
-            </h5>
-            <button type="button" class="btn-close btn-close-white" @click="showCreateEventForm = false"></button>
-          </div>
-          <div class="modal-body">
-            <form @submit.prevent="submitEventForm">
-              <div class="row">
-                <!-- Event Name -->
-                <div class="col-md-6 mb-3">
-                  <label for="eventName" class="form-label fw-bold">Event Name <span class="text-danger">*</span></label>
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    id="eventName" 
-                    v-model="eventFormData.eventName"
-                    :class="{ 'is-invalid': errors.eventName }"
-                    placeholder="Enter event name"
-                  >
-                  <div v-if="errors.eventName" class="invalid-feedback">{{ errors.eventName }}</div>
-                </div>
 
-                <!-- Sport Category -->
-                <div class="col-md-6 mb-3">
-                  <label for="category" class="form-label fw-bold">Sport Category <span class="text-danger">*</span></label>
-                  <select 
-                    class="form-select" 
-                    id="category" 
-                    v-model="eventFormData.category"
-                    :class="{ 'is-invalid': errors.category }"
-                  >
-                    <option value="">Select sport category</option>
-                    <option v-for="category in sportCategories" :key="category" :value="category">
-                      {{ category }}
-                    </option>
-                  </select>
-                  <div v-if="errors.category" class="invalid-feedback">{{ errors.category }}</div>
-                </div>
+    <AuthModal 
+      :show="showAuthModal"
+      :auth-mode="authMode"
+      @close="showAuthModal = false"
+      @login="login"
+      @register="register"
+      @toggle-mode="toggleAuthMode"
+    />
 
-                <!-- Event Date -->
-                <div class="col-md-6 mb-3">
-                  <label for="eventDate" class="form-label fw-bold">Event Date <span class="text-danger">*</span></label>
-                  <input 
-                    type="date" 
-                    class="form-control" 
-                    id="eventDate" 
-                    v-model="eventFormData.eventDate"
-                    :class="{ 'is-invalid': errors.eventDate }"
-                  >
-                  <div v-if="errors.eventDate" class="invalid-feedback">{{ errors.eventDate }}</div>
-                </div>
+    <CreateEventModal 
+      :show="showCreateEventForm"
+      :categories="sportCategories"
+      @close="showCreateEventForm = false"
+      @create="createEvent"
+    />
 
-                <!-- Event Time -->
-                <div class="col-md-6 mb-3">
-                  <label for="eventTime" class="form-label fw-bold">Event Time <span class="text-danger">*</span></label>
-                  <input 
-                    type="time" 
-                    class="form-control" 
-                    id="eventTime" 
-                    v-model="eventFormData.eventTime"
-                    :class="{ 'is-invalid': errors.eventTime }"
-                  >
-                  <div v-if="errors.eventTime" class="invalid-feedback">{{ errors.eventTime }}</div>
-                </div>
-
-                <!-- Event Location -->
-                <div class="col-12 mb-3">
-                  <label for="location" class="form-label fw-bold">Event Location <span class="text-danger">*</span></label>
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    id="location" 
-                    v-model="eventFormData.location"
-                    :class="{ 'is-invalid': errors.location }"
-                    placeholder="Enter detailed address"
-                  >
-                  <div v-if="errors.location" class="invalid-feedback">{{ errors.location }}</div>
-                </div>
-
-                <!-- Max Participants -->
-                <div class="col-md-6 mb-3">
-                  <label for="maxParticipants" class="form-label fw-bold">Max Participants <span class="text-danger">*</span></label>
-                  <input 
-                    type="number" 
-                    class="form-control" 
-                    id="maxParticipants" 
-                    v-model="eventFormData.maxParticipants"
-                    :class="{ 'is-invalid': errors.maxParticipants }"
-                    placeholder="Enter number of participants"
-                    min="1"
-                    max="1000"
-                  >
-                  <div v-if="errors.maxParticipants" class="invalid-feedback">{{ errors.maxParticipants }}</div>
-                </div>
-
-                <!-- Ticket Price -->
-                <div class="col-md-6 mb-3">
-                  <label for="ticketPrice" class="form-label fw-bold">Ticket Price ($) <span class="text-danger">*</span></label>
-                  <input 
-                    type="number" 
-                    class="form-control" 
-                    id="ticketPrice" 
-                    v-model="eventFormData.ticketPrice"
-                    :class="{ 'is-invalid': errors.ticketPrice }"
-                    placeholder="0.00"
-                    min="0"
-                    max="10000"
-                    step="0.01"
-                  >
-                  <div v-if="errors.ticketPrice" class="invalid-feedback">{{ errors.ticketPrice }}</div>
-                  <div class="form-text">Enter 0 for free events</div>
-                </div>
-
-                <!-- Contact Email -->
-                <div class="col-12 mb-3">
-                  <label for="contactEmail" class="form-label fw-bold">Contact Email <span class="text-danger">*</span></label>
-                  <input 
-                    type="email" 
-                    class="form-control" 
-                    id="contactEmail" 
-                    v-model="eventFormData.contactEmail"
-                    :class="{ 'is-invalid': errors.contactEmail }"
-                    placeholder="example@email.com"
-                  >
-                  <div v-if="errors.contactEmail" class="invalid-feedback">{{ errors.contactEmail }}</div>
-                </div>
-
-                <!-- Event Description -->
-                <div class="col-12 mb-3">
-                  <label for="description" class="form-label fw-bold">Event Description <span class="text-danger">*</span></label>
-                  <textarea 
-                    class="form-control" 
-                    id="description" 
-                    rows="4" 
-                    v-model="eventFormData.description"
-                    :class="{ 'is-invalid': errors.description }"
-                    placeholder="Please describe the event details, rules, and important notes"
-                  ></textarea>
-                  <div v-if="errors.description" class="invalid-feedback">{{ errors.description }}</div>
-                  <div class="form-text">{{ eventFormData.description.length }}/1000 characters</div>
-                </div>
-              </div>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="resetForm">
-              <i class="bi bi-arrow-clockwise me-2"></i>Reset Form
-            </button>
-            <button type="button" class="btn btn-outline-secondary" @click="showCreateEventForm = false">
-              Cancel
-            </button>
-            <button type="button" class="btn btn-primary" @click="submitEventForm">
-              <i class="bi bi-check-circle me-2"></i>Create Event
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Auth Modal -->
-    <div v-if="showAuthModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">{{ authMode === 'login' ? 'Login' : 'Register' }}</h5>
-            <button type="button" class="btn-close" @click="showAuthModal = false"></button>
-          </div>
-          <div class="modal-body">
-            <form @submit.prevent="authMode === 'login' ? login() : register()">
-              <div class="mb-3">
-                <label class="form-label">Username</label>
-                <input type="text" class="form-control" v-model="authForm.username" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Password</label>
-                <input type="password" class="form-control" v-model="authForm.password" required>
-              </div>
-              <div class="mb-3" v-if="authMode === 'register'">
-                <label class="form-label">Role</label>
-                <select class="form-select" v-model="authForm.role">
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-              <button type="submit" class="btn btn-primary w-100">
-                {{ authMode === 'login' ? 'Login' : 'Register' }}
-              </button>
-            </form>
-            <div class="text-center mt-3">
-              <button class="btn btn-link" @click="authMode = authMode === 'login' ? 'register' : 'login'">
-                {{ authMode === 'login' ? 'Need an account? Register' : 'Have an account? Login' }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Admin Panel -->
-    <section id="admin" class="py-5 bg-light" v-if="isAdmin">
-      <div class="container">
-        <h2 class="text-center mb-4">Admin Panel</h2>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="card">
-              <div class="card-header">
-                <h5>Users Management</h5>
-              </div>
-              <div class="card-body">
-                <div class="table-responsive">
-                  <table class="table table-sm">
-                    <thead>
-                      <tr>
-                        <th>Username</th>
-                        <th>Role</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="user in users" :key="user.id">
-                        <td>{{ user.username }}</td>
-                        <td>{{ user.role }}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="card">
-              <div class="card-header">
-                <h5>Events Management</h5>
-              </div>
-              <div class="card-body">
-                <p>Total Events: {{ events.length }}</p>
-                <p v-if="events.length > 0">Average Rating: {{ (events.reduce((sum, e) => sum + (e.averageRating || 0), 0) / events.length).toFixed(1) }}</p>
-                <div v-if="events.some(e => e.ratings && e.ratings.length > 0)" class="mb-3">
-                  <h6>Top Rated Events:</h6>
-                  <div v-for="event in events.filter(e => e.ratings && e.ratings.length > 0).sort((a, b) => b.averageRating - a.averageRating).slice(0, 3)" :key="event.id" class="small">
-                    {{ event.name }}: {{ event.averageRating.toFixed(1) }} ⭐ ({{ event.ratings.length }} reviews)
-                  </div>
-                </div>
-                <button class="btn btn-danger btn-sm" @click="events = []; saveToLocalStorage(STORAGE_KEYS.EVENTS, [])">
-                  Clear All Events
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <AdminPanel 
+      v-if="isAdmin"
+      :users="users"
+      :events="events"
+      @clear-events="clearAllEvents"
+    />
 
     <footer class="bg-dark text-white py-4">
       <div class="container">
@@ -784,7 +337,6 @@ onMounted(() => {
 </template>
 
 <style>
-
 * {
   margin: 0;
   padding: 0;
@@ -793,22 +345,6 @@ onMounted(() => {
 
 body, html {
   overflow-x: hidden;
-}
-
-.navbar {
-  background: rgba(0, 0, 0, 0.1) !important;
-  backdrop-filter: blur(10px);
-}
-
-.navbar-scrolled {
-  background: rgba(0, 0, 0, 0.9) !important;
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
-}
-
-.brand-text {
-  color: #fff !important;
-  font-size: 1.5rem;
-  font-weight: bold;
 }
 
 .hero-section {
@@ -900,10 +436,21 @@ body, html {
   overflow: hidden;
 }
 
-
-
 .news-section {
   background: #000000 !important;
+}
+
+.bg-gradient-light {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+i.display-1 {
+  font-size: 4rem;
+  opacity: 0.3;
 }
 
 @media (max-width: 768px) {
@@ -917,102 +464,8 @@ body, html {
     padding-right: 0.5rem;
   }
   
-  .modal-dialog {
-    margin: 0.5rem;
-  }
-  
-  .modal-body {
-    padding: 1rem;
-  }
-  
-  .form-control,
-  .form-select {
-    font-size: 16px; 
-  }
-  
-  .event-card .card-body {
-    padding: 1rem;
-  }
-  
   .display-4 {
     font-size: 2rem;
   }
-}
-
-@media (max-width: 576px) {
-  .event-card .row.g-2 .col-6 {
-    font-size: 0.875rem;
-  }
-  
-  .btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-  }
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-.is-invalid {
-  border-color: #dc3545 !important;
-}
-
-.invalid-feedback {
-  width: 100%;
-  margin-top: 0.25rem;
-  font-size: 0.875rem;
-  color: #dc3545 !important;
-  display: block !important;
-}
-
-.modal-content {
-  border-radius: 15px;
-  border: none;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-}
-
-.modal-header {
-  border-top-left-radius: 15px;
-  border-top-right-radius: 15px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.form-control:focus,
-.form-select:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
-
-
-.bg-gradient-light {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-}
-
-.event-card {
-  border: none;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  border-radius: 20px;
-  overflow: hidden;
-}
-
-.event-card .card-header {
-  background: linear-gradient(45deg, #f8f9fa, #ffffff);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.badge {
-  font-size: 0.75rem;
-  padding: 0.5em 0.75em;
-}
-
-
-
-
-
-i.display-1 {
-  font-size: 4rem;
-  opacity: 0.3;
 }
 </style>
