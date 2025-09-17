@@ -42,7 +42,13 @@ const loadDataFromStorage = () => {
   const savedUsers = loadFromLocalStorage(STORAGE_KEYS.USERS, [])
   const savedCurrentUser = loadFromLocalStorage(STORAGE_KEYS.CURRENT_USER, null)
   
-  if (savedEvents.length > 0) events.value = savedEvents
+  if (savedEvents.length > 0) {
+    events.value = savedEvents.map(event => ({
+      ...event,
+      ratings: event.ratings || [],
+      averageRating: event.averageRating || 0
+    }))
+  }
   if (savedUsers.length > 0) users.value = savedUsers
   if (savedCurrentUser) currentUser.value = savedCurrentUser
 }
@@ -88,11 +94,48 @@ const addEventToData = (newEvent) => {
     id: Date.now(),
     participants: 0,
     status: 'upcoming',
-    organizer: 'Current User'
+    organizer: 'Current User',
+    ratings: [],
+    averageRating: 0
   }
   
   events.value.unshift(eventWithId)
   saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
+}
+
+const rateEvent = (eventId, rating) => {
+  if (!currentUser.value) {
+    alert('Please login to rate events')
+    return
+  }
+  
+  const event = events.value.find(e => e.id === eventId)
+  if (!event) return
+  
+  if (!event.ratings) event.ratings = []
+  
+  const existingRating = event.ratings.find(r => r.userId === currentUser.value.id)
+  
+  if (existingRating) {
+    existingRating.rating = rating
+  } else {
+    event.ratings.push({
+      userId: currentUser.value.id,
+      username: currentUser.value.username,
+      rating: rating
+    })
+  }
+  
+  event.averageRating = event.ratings.reduce((sum, r) => sum + r.rating, 0) / event.ratings.length
+  saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
+  
+  console.log('Rating updated:', { eventId, rating, averageRating: event.averageRating })
+}
+
+const getUserRating = (event) => {
+  if (!currentUser.value || !event.ratings) return 0
+  const userRating = event.ratings.find(r => r.userId === currentUser.value.id)
+  return userRating ? userRating.rating : 0
 }
 
 const sportsNews = ref([
@@ -417,6 +460,32 @@ onMounted(() => {
                       <small class="text-muted">{{ event.participants }}/{{ event.maxParticipants }} participants</small>
                     </div>
                   </div>
+                  
+                  <div class="mb-3" v-if="event.ratings && event.ratings.length > 0">
+                    <div class="d-flex align-items-center justify-content-between">
+                      <div class="d-flex align-items-center">
+                        <span class="me-2">
+                          <i v-for="n in 5" :key="n" 
+                             :class="n <= Math.round(event.averageRating) ? 'bi bi-star-fill text-warning' : 'bi bi-star text-muted'"
+                             style="font-size: 0.8rem;"></i>
+                        </span>
+                        <small class="text-muted">{{ event.averageRating.toFixed(1) }}</small>
+                      </div>
+                      <small class="text-muted">({{ event.ratings.length }} reviews)</small>
+                    </div>
+                  </div>
+                  
+                  <div class="mb-3" v-if="currentUser">
+                    <div class="text-center">
+                      <small class="text-muted d-block mb-1">Rate this event:</small>
+                      <div>
+                        <i v-for="n in 5" :key="n" 
+                           :class="n <= getUserRating(event) ? 'bi bi-star-fill text-warning' : 'bi bi-star text-muted'"
+                           @click="rateEvent(event.id, n)"
+                           style="cursor: pointer; font-size: 1rem; margin: 0 1px;"></i>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div class="card-footer bg-transparent">
                   <button class="btn btn-primary btn-sm w-100" v-if="currentUser" :disabled="!isUser">
@@ -677,6 +746,13 @@ onMounted(() => {
               </div>
               <div class="card-body">
                 <p>Total Events: {{ events.length }}</p>
+                <p v-if="events.length > 0">Average Rating: {{ (events.reduce((sum, e) => sum + (e.averageRating || 0), 0) / events.length).toFixed(1) }}</p>
+                <div v-if="events.some(e => e.ratings && e.ratings.length > 0)" class="mb-3">
+                  <h6>Top Rated Events:</h6>
+                  <div v-for="event in events.filter(e => e.ratings && e.ratings.length > 0).sort((a, b) => b.averageRating - a.averageRating).slice(0, 3)" :key="event.id" class="small">
+                    {{ event.name }}: {{ event.averageRating.toFixed(1) }} ⭐ ({{ event.ratings.length }} reviews)
+                  </div>
+                </div>
                 <button class="btn btn-danger btn-sm" @click="events = []; saveToLocalStorage(STORAGE_KEYS.EVENTS, [])">
                   Clear All Events
                 </button>
