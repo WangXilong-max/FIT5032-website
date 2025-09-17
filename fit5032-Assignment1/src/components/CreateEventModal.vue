@@ -18,6 +18,7 @@
                   class="form-control" 
                   id="eventName" 
                   v-model="form.eventName"
+                  @blur="validateForm"
                   :class="{ 'is-invalid': errors.eventName }"
                   placeholder="Enter event name"
                 >
@@ -30,6 +31,7 @@
                   class="form-select" 
                   id="category" 
                   v-model="form.category"
+                  @blur="validateForm"
                   :class="{ 'is-invalid': errors.category }"
                 >
                   <option value="">Select sport category</option>
@@ -47,6 +49,7 @@
                   class="form-control" 
                   id="eventDate" 
                   v-model="form.eventDate"
+                  @blur="validateForm"
                   :class="{ 'is-invalid': errors.eventDate }"
                 >
                 <div v-if="errors.eventDate" class="invalid-feedback">{{ errors.eventDate }}</div>
@@ -59,6 +62,7 @@
                   class="form-control" 
                   id="eventTime" 
                   v-model="form.eventTime"
+                  @blur="validateForm"
                   :class="{ 'is-invalid': errors.eventTime }"
                 >
                 <div v-if="errors.eventTime" class="invalid-feedback">{{ errors.eventTime }}</div>
@@ -71,6 +75,7 @@
                   class="form-control" 
                   id="location" 
                   v-model="form.location"
+                  @blur="validateForm"
                   :class="{ 'is-invalid': errors.location }"
                   placeholder="Enter detailed address"
                 >
@@ -84,6 +89,7 @@
                   class="form-control" 
                   id="maxParticipants" 
                   v-model="form.maxParticipants"
+                  @blur="validateForm"
                   :class="{ 'is-invalid': errors.maxParticipants }"
                   placeholder="Enter number of participants"
                   min="1"
@@ -99,6 +105,7 @@
                   class="form-control" 
                   id="ticketPrice" 
                   v-model="form.ticketPrice"
+                  @blur="validateForm"
                   :class="{ 'is-invalid': errors.ticketPrice }"
                   placeholder="0.00"
                   min="0"
@@ -116,6 +123,7 @@
                   class="form-control" 
                   id="contactEmail" 
                   v-model="form.contactEmail"
+                  @blur="validateForm"
                   :class="{ 'is-invalid': errors.contactEmail }"
                   placeholder="example@email.com"
                 >
@@ -129,6 +137,7 @@
                   id="description" 
                   rows="4" 
                   v-model="form.description"
+                  @blur="validateForm"
                   :class="{ 'is-invalid': errors.description }"
                   placeholder="Please describe the event details, rules, and important notes"
                 ></textarea>

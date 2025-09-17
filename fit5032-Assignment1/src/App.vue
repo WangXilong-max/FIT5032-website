@@ -6,7 +6,7 @@ import AuthModal from './components/AuthModal.vue'
 import AdminPanel from './components/AdminPanel.vue'
 import CreateEventModal from './components/CreateEventModal.vue'
 import { sportsNews, sportCategories } from './data/sportsData.js'
-import { sanitizeInput, validateNumeric } from './utils/security.js'
+import { sanitizeInput, validateNumeric, validateEmail } from './utils/security.js'
 import { STORAGE_KEYS, saveToLocalStorage, loadFromLocalStorage } from './utils/storage.js'
 
 // App state
@@ -59,8 +59,15 @@ const register = (formData) => {
     alert('Username must be at least 3 characters')
     return
   }
-  if (!formData.password || formData.password.length < 6) {
-    alert('Password must be at least 6 characters')
+  // Password must contain at least 1 uppercase, 1 number, 1 special char, and be 8+ chars
+  const strongPassword = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/
+  if (!formData.password || !strongPassword.test(formData.password)) {
+    alert('Password must be 8+ chars with uppercase, number and special char')
+    return
+  }
+  const email = (formData.email || '').toLowerCase().trim()
+  if (!validateEmail(email)) {
+    alert('Please enter a valid email')
     return
   }
   if (users.value.find(u => u.username === username)) {
@@ -72,7 +79,8 @@ const register = (formData) => {
     id: Date.now(), 
     username: username,
     password: formData.password,
-    role: formData.role 
+    role: formData.role,
+    email: email
   }
   users.value.push(newUser)
   saveToLocalStorage(STORAGE_KEYS.USERS, users.value)
