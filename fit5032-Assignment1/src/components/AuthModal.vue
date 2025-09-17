@@ -10,21 +10,21 @@
           <form @submit.prevent="handleSubmit">
             <div class="mb-3">
               <label class="form-label">Username</label>
-              <input type="text" class="form-control" v-model="form.username" @blur="touched.username = true; validateUsername()" required>
-              <div v-if="touched.username && mergedErrors.username" class="text-danger small mt-1">{{ mergedErrors.username }}</div>
+              <input type="text" class="form-control" :class="{ 'is-invalid': touched.username && mergedErrors.username }" v-model="form.username" @blur="touched.username = true; validateUsername()" required>
+              <div v-if="touched.username && mergedErrors.username" class="invalid-feedback d-block">{{ mergedErrors.username }}</div>
             </div>
             <div class="mb-3">
               <label class="form-label">Password</label>
-              <input type="password" class="form-control" v-model="form.password" @blur="touched.password = true; validatePassword()" required>
-              <div v-if="authMode === 'register' && touched.password && mergedErrors.password" class="text-danger small mt-1">{{ mergedErrors.password }}</div>
+              <input type="password" class="form-control" :class="{ 'is-invalid': authMode === 'register' && touched.password && mergedErrors.password }" v-model="form.password" @blur="touched.password = true; validatePassword()" required>
+              <div v-if="authMode === 'register' && touched.password && mergedErrors.password" class="invalid-feedback d-block">{{ mergedErrors.password }}</div>
               <div v-if="authMode === 'register'" class="form-text">
                 Must be 8+ chars and include uppercase, number, special char
               </div>
             </div>
             <div class="mb-3" v-if="authMode === 'register'">
               <label class="form-label">Email</label>
-              <input type="email" class="form-control" v-model="form.email" @blur="touched.email = true; validateEmailField()" required>
-              <div v-if="touched.email && mergedErrors.email" class="text-danger small mt-1">{{ mergedErrors.email }}</div>
+              <input type="email" class="form-control" :class="{ 'is-invalid': touched.email && mergedErrors.email }" v-model="form.email" @blur="touched.email = true; validateEmailField()" required>
+              <div v-if="touched.email && mergedErrors.email" class="invalid-feedback d-block">{{ mergedErrors.email }}</div>
             </div>
             <div class="mb-3" v-if="authMode === 'register'">
               <label class="form-label">Role</label>
@@ -90,7 +90,10 @@ const validateAll = () => {
 const mergedErrors = computed(() => ({ ...errors.value, ...props.externalErrors }))
 
 const handleSubmit = () => {
-  if (!validateAll()) return
+  if (!validateAll()) {
+    touched.value = { username: true, password: true, email: true }
+    return
+  }
   if (props.authMode === 'login') {
     emit('login', form.value)
   } else {
@@ -112,4 +115,13 @@ watch(() => props.show, (newVal) => {
     errors.value = { username: '', password: '', email: '' }
   }
 })
+
+watch(() => props.externalErrors, (val) => {
+  if (!val) return
+  Object.keys(val).forEach((key) => {
+    if (val[key]) {
+      touched.value[key] = true
+    }
+  })
+}, { deep: true })
 </script>

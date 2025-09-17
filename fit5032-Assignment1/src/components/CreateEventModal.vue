@@ -18,11 +18,11 @@
                   class="form-control" 
                   id="eventName" 
                   v-model="form.eventName"
-                  @blur="validateForm"
-                  :class="{ 'is-invalid': errors.eventName }"
+                  @blur="touched.eventName = true; validateField('eventName')"
+                  :class="{ 'is-invalid': touched.eventName && errors.eventName }"
                   placeholder="Enter event name"
                 >
-                <div v-if="errors.eventName" class="invalid-feedback">{{ errors.eventName }}</div>
+                <div v-if="touched.eventName && errors.eventName" class="invalid-feedback">{{ errors.eventName }}</div>
               </div>
 
               <div class="col-md-6 mb-3">
@@ -31,15 +31,15 @@
                   class="form-select" 
                   id="category" 
                   v-model="form.category"
-                  @blur="validateForm"
-                  :class="{ 'is-invalid': errors.category }"
+                  @blur="touched.category = true; validateField('category')"
+                  :class="{ 'is-invalid': touched.category && errors.category }"
                 >
                   <option value="">Select sport category</option>
                   <option v-for="category in categories" :key="category" :value="category">
                     {{ category }}
                   </option>
                 </select>
-                <div v-if="errors.category" class="invalid-feedback">{{ errors.category }}</div>
+                <div v-if="touched.category && errors.category" class="invalid-feedback">{{ errors.category }}</div>
               </div>
 
               <div class="col-md-6 mb-3">
@@ -49,10 +49,10 @@
                   class="form-control" 
                   id="eventDate" 
                   v-model="form.eventDate"
-                  @blur="validateForm"
-                  :class="{ 'is-invalid': errors.eventDate }"
+                  @blur="touched.eventDate = true; validateField('eventDate')"
+                  :class="{ 'is-invalid': touched.eventDate && errors.eventDate }"
                 >
-                <div v-if="errors.eventDate" class="invalid-feedback">{{ errors.eventDate }}</div>
+                <div v-if="touched.eventDate && errors.eventDate" class="invalid-feedback">{{ errors.eventDate }}</div>
               </div>
 
               <div class="col-md-6 mb-3">
@@ -62,10 +62,10 @@
                   class="form-control" 
                   id="eventTime" 
                   v-model="form.eventTime"
-                  @blur="validateForm"
-                  :class="{ 'is-invalid': errors.eventTime }"
+                  @blur="touched.eventTime = true; validateField('eventTime')"
+                  :class="{ 'is-invalid': touched.eventTime && errors.eventTime }"
                 >
-                <div v-if="errors.eventTime" class="invalid-feedback">{{ errors.eventTime }}</div>
+                <div v-if="touched.eventTime && errors.eventTime" class="invalid-feedback">{{ errors.eventTime }}</div>
               </div>
 
               <div class="col-12 mb-3">
@@ -75,11 +75,11 @@
                   class="form-control" 
                   id="location" 
                   v-model="form.location"
-                  @blur="validateForm"
-                  :class="{ 'is-invalid': errors.location }"
+                  @blur="touched.location = true; validateField('location')"
+                  :class="{ 'is-invalid': touched.location && errors.location }"
                   placeholder="Enter detailed address"
                 >
-                <div v-if="errors.location" class="invalid-feedback">{{ errors.location }}</div>
+                <div v-if="touched.location && errors.location" class="invalid-feedback">{{ errors.location }}</div>
               </div>
 
               <div class="col-md-6 mb-3">
@@ -89,13 +89,13 @@
                   class="form-control" 
                   id="maxParticipants" 
                   v-model="form.maxParticipants"
-                  @blur="validateForm"
-                  :class="{ 'is-invalid': errors.maxParticipants }"
+                  @blur="touched.maxParticipants = true; validateField('maxParticipants')"
+                  :class="{ 'is-invalid': touched.maxParticipants && errors.maxParticipants }"
                   placeholder="Enter number of participants"
                   min="1"
                   max="1000"
                 >
-                <div v-if="errors.maxParticipants" class="invalid-feedback">{{ errors.maxParticipants }}</div>
+                <div v-if="touched.maxParticipants && errors.maxParticipants" class="invalid-feedback">{{ errors.maxParticipants }}</div>
               </div>
 
               <div class="col-md-6 mb-3">
@@ -105,14 +105,14 @@
                   class="form-control" 
                   id="ticketPrice" 
                   v-model="form.ticketPrice"
-                  @blur="validateForm"
-                  :class="{ 'is-invalid': errors.ticketPrice }"
+                  @blur="touched.ticketPrice = true; validateField('ticketPrice')"
+                  :class="{ 'is-invalid': touched.ticketPrice && errors.ticketPrice }"
                   placeholder="0.00"
                   min="0"
                   max="10000"
                   step="0.01"
                 >
-                <div v-if="errors.ticketPrice" class="invalid-feedback">{{ errors.ticketPrice }}</div>
+                <div v-if="touched.ticketPrice && errors.ticketPrice" class="invalid-feedback">{{ errors.ticketPrice }}</div>
                 <div class="form-text">Enter 0 for free events</div>
               </div>
 
@@ -123,11 +123,11 @@
                   class="form-control" 
                   id="contactEmail" 
                   v-model="form.contactEmail"
-                  @blur="validateForm"
-                  :class="{ 'is-invalid': errors.contactEmail }"
+                  @blur="touched.contactEmail = true; validateField('contactEmail')"
+                  :class="{ 'is-invalid': touched.contactEmail && errors.contactEmail }"
                   placeholder="example@email.com"
                 >
-                <div v-if="errors.contactEmail" class="invalid-feedback">{{ errors.contactEmail }}</div>
+                <div v-if="touched.contactEmail && errors.contactEmail" class="invalid-feedback">{{ errors.contactEmail }}</div>
               </div>
 
               <div class="col-12 mb-3">
@@ -137,11 +137,11 @@
                   id="description" 
                   rows="4" 
                   v-model="form.description"
-                  @blur="validateForm"
-                  :class="{ 'is-invalid': errors.description }"
+                  @blur="touched.description = true; validateField('description')"
+                  :class="{ 'is-invalid': touched.description && errors.description }"
                   placeholder="Please describe the event details, rules, and important notes"
                 ></textarea>
-                <div v-if="errors.description" class="invalid-feedback">{{ errors.description }}</div>
+                <div v-if="touched.description && errors.description" class="invalid-feedback">{{ errors.description }}</div>
                 <div class="form-text">{{ form.description.length }}/1000 characters</div>
               </div>
             </div>
@@ -187,57 +187,74 @@ const form = ref({
 })
 
 const errors = ref({})
+const touched = ref({
+  eventName: false,
+  eventDate: false,
+  eventTime: false,
+  location: false,
+  category: false,
+  maxParticipants: false,
+  ticketPrice: false,
+  description: false,
+  contactEmail: false
+})
+
+const validators = {
+  eventName: () => {
+    const value = sanitizeInput(form.value.eventName)
+    return !value || value.length < 3 || value.length > 100
+      ? "Event name must be 3-100 characters" : ''
+  },
+  eventDate: () => {
+    if (!form.value.eventDate) return "Please select an event date"
+    const selectedDate = new Date(form.value.eventDate)
+    const today = new Date()
+    if (selectedDate < today) return "Event date cannot be in the past"
+    return ''
+  },
+  eventTime: () => {
+    return !form.value.eventTime ? "Please select an event time" : ''
+  },
+  location: () => {
+    const value = sanitizeInput(form.value.location)
+    return !value || value.length < 5 || value.length > 200
+      ? "Location must be 5-200 characters" : ''
+  },
+  category: () => {
+    return !form.value.category || !props.categories.includes(form.value.category)
+      ? "Please select a valid sport category" : ''
+  },
+  maxParticipants: () => {
+    return !validateNumeric(form.value.maxParticipants, 1, 1000)
+      ? "Participants must be between 1-1000" : ''
+  },
+  ticketPrice: () => {
+    return !validateNumeric(form.value.ticketPrice, 0, 10000)
+      ? "Price must be between $0-$10000" : ''
+  },
+  description: () => {
+    const value = sanitizeInput(form.value.description)
+    return !value || value.length < 10 || value.length > 1000
+      ? "Description must be 10-1000 characters" : ''
+  },
+  contactEmail: () => {
+    return !validateEmail(form.value.contactEmail)
+      ? "Please enter a valid email address" : ''
+  }
+}
+
+const validateField = (field) => {
+  const message = validators[field]()
+  errors.value = { ...errors.value, [field]: message }
+}
 
 const validateForm = () => {
   const newErrors = {}
-  
-  const eventName = sanitizeInput(form.value.eventName)
-  if (!eventName || eventName.length < 3 || eventName.length > 100) {
-    newErrors.eventName = "Event name must be 3-100 characters"
-  }
-  
-  if (!form.value.eventDate) {
-    newErrors.eventDate = "Please select an event date"
-  } else {
-    const selectedDate = new Date(form.value.eventDate)
-    const today = new Date()
-    if (selectedDate < today) {
-      newErrors.eventDate = "Event date cannot be in the past"
-    }
-  }
-  
-  if (!form.value.eventTime) {
-    newErrors.eventTime = "Please select an event time"
-  }
-  
-  const location = sanitizeInput(form.value.location)
-  if (!location || location.length < 5 || location.length > 200) {
-    newErrors.location = "Location must be 5-200 characters"
-  }
-  
-  if (!form.value.category || !props.categories.includes(form.value.category)) {
-    newErrors.category = "Please select a valid sport category"
-  }
-  
-  if (!validateNumeric(form.value.maxParticipants, 1, 1000)) {
-    newErrors.maxParticipants = "Participants must be between 1-1000"
-  }
-  
-  if (!validateNumeric(form.value.ticketPrice, 0, 10000)) {
-    newErrors.ticketPrice = "Price must be between $0-$10000"
-  }
-  
-  const description = sanitizeInput(form.value.description)
-  if (!description || description.length < 10 || description.length > 1000) {
-    newErrors.description = "Description must be 10-1000 characters"
-  }
-  
-  if (!validateEmail(form.value.contactEmail)) {
-    newErrors.contactEmail = "Please enter a valid email address"
-  }
-  
+  Object.keys(validators).forEach((key) => {
+    newErrors[key] = validators[key]()
+  })
   errors.value = newErrors
-  return Object.keys(newErrors).length === 0
+  return Object.values(newErrors).every((msg) => !msg)
 }
 
 const handleSubmit = () => {
@@ -256,7 +273,17 @@ const handleSubmit = () => {
     emit('create', eventData)
     resetForm()
   } else {
-    alert('Please correct the errors in the form')
+    touched.value = {
+      eventName: true,
+      eventDate: true,
+      eventTime: true,
+      location: true,
+      category: true,
+      maxParticipants: true,
+      ticketPrice: true,
+      description: true,
+      contactEmail: true
+    }
   }
 }
 
@@ -273,6 +300,17 @@ const resetForm = () => {
     contactEmail: ''
   }
   errors.value = {}
+  touched.value = {
+    eventName: false,
+    eventDate: false,
+    eventTime: false,
+    location: false,
+    category: false,
+    maxParticipants: false,
+    ticketPrice: false,
+    description: false,
+    contactEmail: false
+  }
 }
 
 watch(() => props.show, (newVal) => {

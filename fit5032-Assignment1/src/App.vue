@@ -14,6 +14,7 @@ const currentUser = ref(null)
 const showAuthModal = ref(false)
 const authMode = ref('login')
 const users = ref([])
+const externalAuthErrors = ref({})
 const events = ref([])
 const isScrolled = ref(false)
 const showCreateEventForm = ref(false)
@@ -48,30 +49,36 @@ const login = (formData) => {
     currentUser.value = user
     saveToLocalStorage(STORAGE_KEYS.CURRENT_USER, user)
     showAuthModal.value = false
+    externalAuthErrors.value = {}
   } else {
-    alert('Invalid credentials')
+    externalAuthErrors.value = { username: 'Invalid credentials', password: 'Invalid credentials' }
+    showAuthModal.value = true
   }
 }
 
 const register = (formData) => {
   const username = sanitizeInput(formData.username)
   if (!username || username.length < 3) {
-    alert('Username must be at least 3 characters')
+    externalAuthErrors.value = { username: 'Username must be at least 3 characters' }
+    showAuthModal.value = true
     return
   }
   // Password must contain at least 1 uppercase, 1 number, 1 special char, and be 8+ chars
   const strongPassword = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/
   if (!formData.password || !strongPassword.test(formData.password)) {
-    alert('Password must be 8+ chars with uppercase, number and special char')
+    externalAuthErrors.value = { password: 'Password must be 8+ chars with uppercase, number and special char' }
+    showAuthModal.value = true
     return
   }
   const email = (formData.email || '').toLowerCase().trim()
   if (!validateEmail(email)) {
-    alert('Please enter a valid email')
+    externalAuthErrors.value = { email: 'Please enter a valid email' }
+    showAuthModal.value = true
     return
   }
   if (users.value.find(u => u.username === username)) {
-    alert('Username already exists')
+    externalAuthErrors.value = { username: 'Username already exists' }
+    showAuthModal.value = true
     return
   }
   
@@ -87,6 +94,7 @@ const register = (formData) => {
   currentUser.value = newUser
   saveToLocalStorage(STORAGE_KEYS.CURRENT_USER, newUser)
   showAuthModal.value = false
+  externalAuthErrors.value = {}
 }
 
 const logout = () => {
@@ -304,6 +312,7 @@ onMounted(() => {
     <AuthModal 
       :show="showAuthModal"
       :auth-mode="authMode"
+      :external-errors="externalAuthErrors"
       @close="showAuthModal = false"
       @login="login"
       @register="register"
