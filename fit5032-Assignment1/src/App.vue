@@ -1,8 +1,21 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+
+// Auth state
+const currentUser = ref(null)
+const showAuthModal = ref(false)
+const authMode = ref('login')
+
+// Auth data
+const authForm = ref({ username: '', password: '', role: 'user' })
+const users = ref([])
+
+// App state
 const events = ref([])
 const STORAGE_KEYS = {
-  EVENTS: 'sportsync_events'
+  EVENTS: 'sportsync_events',
+  USERS: 'sportsync_users',
+  CURRENT_USER: 'sportsync_current_user'
 }
 
 // localStorage functions
@@ -23,12 +36,50 @@ const loadFromLocalStorage = (key, defaultValue = []) => {
   }
 }
 
+// Auth functions
 const loadDataFromStorage = () => {
   const savedEvents = loadFromLocalStorage(STORAGE_KEYS.EVENTS, [])
-  if (savedEvents.length > 0) {
-    events.value = savedEvents
+  const savedUsers = loadFromLocalStorage(STORAGE_KEYS.USERS, [])
+  const savedCurrentUser = loadFromLocalStorage(STORAGE_KEYS.CURRENT_USER, null)
+  
+  if (savedEvents.length > 0) events.value = savedEvents
+  if (savedUsers.length > 0) users.value = savedUsers
+  if (savedCurrentUser) currentUser.value = savedCurrentUser
+}
+
+const login = () => {
+  const user = users.value.find(u => u.username === authForm.value.username && u.password === authForm.value.password)
+  if (user) {
+    currentUser.value = user
+    saveToLocalStorage(STORAGE_KEYS.CURRENT_USER, user)
+    showAuthModal.value = false
+    authForm.value = { username: '', password: '', role: 'user' }
+  } else {
+    alert('Invalid credentials')
   }
 }
+
+const register = () => {
+  if (users.value.find(u => u.username === authForm.value.username)) {
+    alert('Username already exists')
+    return
+  }
+  const newUser = { id: Date.now(), ...authForm.value }
+  users.value.push(newUser)
+  saveToLocalStorage(STORAGE_KEYS.USERS, users.value)
+  currentUser.value = newUser
+  saveToLocalStorage(STORAGE_KEYS.CURRENT_USER, newUser)
+  showAuthModal.value = false
+  authForm.value = { username: '', password: '', role: 'user' }
+}
+
+const logout = () => {
+  currentUser.value = null
+  localStorage.removeItem(STORAGE_KEYS.CURRENT_USER)
+}
+
+const isAdmin = computed(() => currentUser.value?.role === 'admin')
+const isUser = computed(() => currentUser.value?.role === 'user')
 
 // Add event
 const addEventToData = (newEvent) => {
@@ -172,6 +223,10 @@ const resetForm = () => {
 
 // Show create form
 const showCreateForm = () => {
+  if (!currentUser.value) {
+    showAuthModal.value = true
+    return
+  }
   showCreateEventForm.value = true
   resetForm()
 }
@@ -230,8 +285,17 @@ onMounted(() => {
             <li class="nav-item">
               <a class="nav-link" href="#activities">Book Activities</a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#about">About Us</a>
+            <li class="nav-item" v-if="isAdmin">
+              <a class="nav-link" href="#admin">Admin Panel</a>
+            </li>
+            <li class="nav-item" v-if="currentUser">
+              <span class="nav-link">Hello, {{ currentUser.username }} ({{ currentUser.role }})</span>
+            </li>
+            <li class="nav-item" v-if="currentUser">
+              <button class="btn btn-outline-light btn-sm" @click="logout">Logout</button>
+            </li>
+            <li class="nav-item" v-if="!currentUser">
+              <button class="btn btn-outline-light btn-sm" @click="showAuthModal = true">Login</button>
             </li>
           </ul>
         </div>
@@ -251,7 +315,7 @@ onMounted(() => {
               <button type="button" class="btn btn-primary btn-lg px-5 py-3 rounded-pill" @click="scrollToActivities">
                 <i class="bi bi-calendar-event me-2"></i>Book Now
               </button>
-              <button type="button" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill" @click="showCreateForm">
+              <button type="button" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill" @click="showCreateForm" v-if="currentUser">
                 <i class="bi bi-plus-circle me-2"></i>Create Event
               </button>
             </div>
@@ -355,8 +419,11 @@ onMounted(() => {
                   </div>
                 </div>
                 <div class="card-footer bg-transparent">
-                  <button class="btn btn-primary btn-sm w-100">
+                  <button class="btn btn-primary btn-sm w-100" v-if="currentUser" :disabled="!isUser">
                     <i class="bi bi-person-plus me-1"></i>Join Event
+                  </button>
+                  <button class="btn btn-secondary btn-sm w-100" v-if="!currentUser" @click="showAuthModal = true">
+                    <i class="bi bi-lock me-1"></i>Login to Join
                   </button>
                 </div>
               </div>
@@ -533,6 +600,92 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- Auth Modal -->
+    <div v-if="showAuthModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">{{ authMode === 'login' ? 'Login' : 'Register' }}</h5>
+            <button type="button" class="btn-close" @click="showAuthModal = false"></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="authMode === 'login' ? login() : register()">
+              <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input type="text" class="form-control" v-model="authForm.username" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-control" v-model="authForm.password" required>
+              </div>
+              <div class="mb-3" v-if="authMode === 'register'">
+                <label class="form-label">Role</label>
+                <select class="form-select" v-model="authForm.role">
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">
+                {{ authMode === 'login' ? 'Login' : 'Register' }}
+              </button>
+            </form>
+            <div class="text-center mt-3">
+              <button class="btn btn-link" @click="authMode = authMode === 'login' ? 'register' : 'login'">
+                {{ authMode === 'login' ? 'Need an account? Register' : 'Have an account? Login' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <section id="admin" class="py-5 bg-light" v-if="isAdmin">
+      <div class="container">
+        <h2 class="text-center mb-4">Admin Panel</h2>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h5>Users Management</h5>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-sm">
+                    <thead>
+                      <tr>
+                        <th>Username</th>
+                        <th>Role</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="user in users" :key="user.id">
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.role }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h5>Events Management</h5>
+              </div>
+              <div class="card-body">
+                <p>Total Events: {{ events.length }}</p>
+                <button class="btn btn-danger btn-sm" @click="events = []; saveToLocalStorage(STORAGE_KEYS.EVENTS, [])">
+                  Clear All Events
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <footer class="bg-dark text-white py-4">
       <div class="container">
