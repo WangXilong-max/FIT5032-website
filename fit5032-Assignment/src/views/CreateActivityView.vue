@@ -547,20 +547,21 @@ const handleSubmit = async () => {
   try {
     // Create event object
     const eventData = {
-      name: form.eventName,
-      category: form.category,
-      date: form.eventDate,
-      time: form.eventTime,
-      location: form.location,
-      maxParticipants: parseInt(form.maxParticipants),
-      price: parseFloat(form.registrationFee) || 0,
-      description: form.description || 'No description provided',
-      equipment: form.equipment,
-      latitude: form.latitude,
-      longitude: form.longitude,
-      status: 'upcoming',
-      creatorId: currentUser.value?.id,  // Store creator ID
-      creatorName: currentUser.value?.email || 'Anonymous'  // Store creator name
+  name: form.eventName,
+  category: form.category,
+  date: form.eventDate,
+  time: form.eventTime,
+  location: form.location,
+  maxParticipants: parseInt(form.maxParticipants),
+  price: parseFloat(form.registrationFee) || 0,
+  description: form.description || 'No description provided',
+  equipment: form.equipment,
+  latitude: form.latitude,
+  longitude: form.longitude,
+  status: 'upcoming',
+  creatorId: currentUser.value?.uid,  // Store creator ID (Firebase UID)
+  creatorName: currentUser.value?.email || 'Anonymous', // Store creator name (email)
+  creatorEmail: currentUser.value?.email || '' // Store creator email explicitly
     }
 
     // Save to Firestore

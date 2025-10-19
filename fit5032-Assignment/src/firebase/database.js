@@ -17,8 +17,6 @@ import {
 } from 'firebase/firestore'
 import { db } from './config'
 
-// ==================== ACTIVITIES COLLECTION ====================
-
 /**
  * Get all activities
  * @returns {Promise<Array>} Array of all activities
@@ -78,10 +76,12 @@ export const getActivityById = async (activityId) => {
 export const createActivity = async (activityData) => {
   try {
     const activitiesRef = collection(db, 'activities')
+    // 创建者自动加入participants，人数为1
+    const creatorId = activityData.creatorId
     const docRef = await addDoc(activitiesRef, {
       ...activityData,
-      participants: [],
-      participantCount: 0,
+      participants: [creatorId],
+      participantCount: 1,
       ratings: [],
       averageRating: 0,
       createdAt: serverTimestamp(),
@@ -91,7 +91,9 @@ export const createActivity = async (activityData) => {
     console.log('Activity created with ID:', docRef.id)
     return {
       id: docRef.id,
-      ...activityData
+      ...activityData,
+      participants: [creatorId],
+      participantCount: 1
     }
   } catch (error) {
     console.error('Error creating activity:', error)
@@ -411,8 +413,6 @@ export const getUserProfile = async (userId) => {
     return null
   }
 }
-
-// ==================== DASHBOARD STATISTICS ====================
 
 /**
  * Get dashboard statistics

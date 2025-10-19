@@ -10,11 +10,11 @@
         <small class="text-muted">
           <i class="bi bi-calendar me-1"></i>{{ event.date }}
         </small>
-        <button class="btn btn-outline-danger btn-sm"
-                @click="$emit('delete', event.id)"
-                title="Delete Event">
-          <i class="bi bi-trash"></i>
-        </button>
+  <button v-if="isCreator" class="btn btn-outline-danger btn-sm"
+    @click="$emit('delete', event.id)"
+    title="Delete Event">
+    <i class="bi bi-trash"></i>
+  </button>
       </div>
     </div>
     <div class="card-body">
@@ -76,6 +76,16 @@
       </div>
     </div>
     <div class="card-footer bg-transparent">
+      <!-- View Details Button -->
+      <div class="mb-2">
+        <router-link
+          :to="`/activities/${event.id}`"
+          class="btn btn-outline-primary btn-sm w-100"
+        >
+          <i class="bi bi-info-circle me-1"></i>View Details
+        </router-link>
+      </div>
+
       <!-- Join/Leave button - only show if user is logged in and activity is not full -->
       <div v-if="currentUser">
         <!-- Creator view - just show status -->
