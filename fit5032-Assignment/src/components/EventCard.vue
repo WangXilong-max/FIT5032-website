@@ -78,34 +78,36 @@
     <div class="card-footer bg-transparent">
       <!-- Join/Leave button - only show if user is logged in and activity is not full -->
       <div v-if="currentUser">
-        <button
-          v-if="!isUserJoined && !isActivityFull && !isCreator"
-          class="btn btn-success btn-sm w-100"
-          @click="joinEvent"
-        >
-          <i class="bi bi-person-plus me-1"></i>Join Event
-        </button>
-        <button
-          v-else-if="isUserJoined && !isCreator"
-          class="btn btn-outline-danger btn-sm w-100"
-          @click="leaveEvent"
-        >
-          <i class="bi bi-person-dash me-1"></i>Leave Event
-        </button>
-        <button
-          v-else-if="isCreator"
-          class="btn btn-secondary btn-sm w-100"
-          disabled
-        >
-          <i class="bi bi-person-check me-1"></i>Your Event
-        </button>
-        <button
-          v-else-if="isActivityFull"
-          class="btn btn-secondary btn-sm w-100"
-          disabled
-        >
-          <i class="bi bi-people-fill me-1"></i>Event Full
-        </button>
+        <!-- Creator view - just show status -->
+        <div v-if="isCreator">
+          <button class="btn btn-secondary btn-sm w-100" disabled>
+            <i class="bi bi-person-check me-1"></i>Your Event ({{ event.participantCount || 0 }}/{{ event.maxParticipants }})
+          </button>
+        </div>
+        <!-- Non-creator buttons -->
+        <div v-else>
+          <button
+            v-if="!isUserJoined && !isActivityFull"
+            class="btn btn-success btn-sm w-100"
+            @click="joinEvent"
+          >
+            <i class="bi bi-person-plus me-1"></i>Join Event
+          </button>
+          <button
+            v-else-if="isUserJoined"
+            class="btn btn-outline-danger btn-sm w-100"
+            @click="leaveEvent"
+          >
+            <i class="bi bi-person-dash me-1"></i>Leave Event
+          </button>
+          <button
+            v-else-if="isActivityFull"
+            class="btn btn-secondary btn-sm w-100"
+            disabled
+          >
+            <i class="bi bi-people-fill me-1"></i>Event Full
+          </button>
+        </div>
       </div>
       <!-- Not logged in message -->
       <div v-else>

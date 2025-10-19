@@ -239,6 +239,58 @@ export const getJoinedActivities = async (userId) => {
   }
 }
 
+/**
+ * Get participants details for an activity
+ * @param {string} activityId - Activity ID
+ * @returns {Promise<Array>} Array of participant details
+ */
+export const getActivityParticipants = async (activityId) => {
+  try {
+    const activityRef = doc(db, 'activities', activityId)
+    const activitySnap = await getDoc(activityRef)
+
+    if (!activitySnap.exists()) {
+      console.error('Activity not found:', activityId)
+      return []
+    }
+
+    const activityData = activitySnap.data()
+    const participantIds = activityData.participants || []
+
+    if (participantIds.length === 0) {
+      return []
+    }
+
+    // Fetch user details for each participant
+    const participants = []
+    for (const userId of participantIds) {
+      const userProfile = await getUserProfile(userId)
+      if (userProfile) {
+        participants.push({
+          userId,
+          email: userProfile.email || 'N/A',
+          displayName: userProfile.displayName || userProfile.email || 'Anonymous',
+          joinedAt: userProfile.joinedAt || new Date().toISOString()
+        })
+      } else {
+        // If user profile doesn't exist, add basic info
+        participants.push({
+          userId,
+          email: 'N/A',
+          displayName: 'User ' + userId.substring(0, 6),
+          joinedAt: new Date().toISOString()
+        })
+      }
+    }
+
+    console.log('Fetched participants for activity:', activityId, participants.length)
+    return participants
+  } catch (error) {
+    console.error('Error fetching activity participants:', error)
+    return []
+  }
+}
+
 // ==================== RATINGS OPERATIONS ====================
 
 /**
@@ -406,6 +458,7 @@ export default {
   joinActivity,
   leaveActivity,
   getJoinedActivities,
+  getActivityParticipants,
 
   // Ratings
   addRating,

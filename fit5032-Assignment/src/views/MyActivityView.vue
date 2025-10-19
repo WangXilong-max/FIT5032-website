@@ -76,7 +76,18 @@
                     <p class="text-muted mb-1">
                       <i class="bi bi-geo-alt"></i> {{ activity.location }}
                     </p>
-                    <span class="badge bg-primary">{{ activity.category }}</span>
+                    <p class="text-muted mb-2">
+                      <i class="bi bi-people"></i> {{ activity.participantCount || 0 }}/{{ activity.maxParticipants }} participants
+                    </p>
+                    <div class="d-flex gap-2 align-items-center">
+                      <span class="badge bg-primary">{{ activity.category }}</span>
+                      <button
+                        class="btn btn-sm btn-dark ms-auto"
+                        @click="viewParticipants(activity)"
+                      >
+                        <i class="bi bi-people-fill me-1"></i>View Participants
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -118,6 +129,13 @@
         </div>
       </div>
     </div>
+
+    <!-- Participants Modal -->
+    <ParticipantsModal
+      ref="participantsModalRef"
+      :activityId="selectedActivityId"
+      :activityName="selectedActivityName"
+    />
   </div>
 </template>
 
@@ -128,6 +146,8 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import { STORAGE_KEYS, loadFromLocalStorage } from '../utils/storage.js'
 import { onAuthStateChange } from '@/firebase/auth'
+import ParticipantsModal from '../components/ParticipantsModal.vue'
+import { Modal } from 'bootstrap'
 
 // Props
 const props = defineProps({
@@ -139,6 +159,9 @@ const props = defineProps({
 
 // State
 const user = ref(null)
+const participantsModalRef = ref(null)
+const selectedActivityId = ref(null)
+const selectedActivityName = ref('')
 
 // Calendar options
 const calendarOptions = ref({
@@ -206,6 +229,18 @@ const loadUser = () => {
 
 const updateCalendar = () => {
   calendarOptions.value.events = calendarEvents.value
+}
+
+const viewParticipants = (activity) => {
+  selectedActivityId.value = activity.id
+  selectedActivityName.value = activity.name
+
+  // Show Bootstrap modal
+  const modalElement = document.getElementById('participantsModal')
+  if (modalElement) {
+    const modal = new Modal(modalElement)
+    modal.show()
+  }
 }
 
 // Lifecycle

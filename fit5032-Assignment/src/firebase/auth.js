@@ -7,12 +7,24 @@ import {
   onAuthStateChanged
 } from 'firebase/auth'
 import { auth } from './config'
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { db } from './config'
 
 // Register new user
-export const registerUser = async (email, password) => {
+export const registerUser = async (email, password, displayName = null) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password)
-    return { success: true, user: userCredential.user }
+    const user = userCredential.user
+
+    // Save user profile to Firestore
+    await setDoc(doc(db, 'users', user.uid), {
+      email: user.email,
+      displayName: displayName || email.split('@')[0],
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    })
+
+    return { success: true, user }
   } catch (error) {
     return { success: false, error: error.message }
   }
