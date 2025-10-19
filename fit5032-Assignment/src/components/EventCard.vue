@@ -60,13 +60,18 @@
 
       <div class="mb-3">
         <div class="text-center">
-          <small class="text-muted d-block mb-1">Rate this event:</small>
+          <small class="text-muted d-block mb-1">
+            {{ hasUserRated ? 'Your rating (click to update):' : 'Rate this event:' }}
+          </small>
           <div>
             <i v-for="n in 5" :key="n"
                :class="n <= currentRating ? 'bi bi-star-fill text-warning' : 'bi bi-star text-muted'"
                @click="handleRate(n)"
                style="cursor: pointer; font-size: 1rem; margin: 0 1px;"></i>
           </div>
+          <small v-if="hasUserRated" class="text-success d-block mt-1">
+            <i class="bi bi-check-circle"></i> You rated this {{ currentRating }} star{{ currentRating > 1 ? 's' : '' }}
+          </small>
         </div>
       </div>
     </div>
@@ -126,9 +131,22 @@ const emit = defineEmits(['delete', 'rate', 'join', 'leave'])
 const currentRating = ref(0)
 const currentUser = ref(null)
 
+// Check if current user has already rated this activity
+const getUserRating = () => {
+  if (!currentUser.value || !props.event.ratings) return 0
+
+  const userRating = props.event.ratings.find(r => r.userId === currentUser.value.id)
+  return userRating ? userRating.rating : 0
+}
+
 // Computed properties
 const isUserJoined = computed(() => {
   return props.event.participants?.includes(currentUser.value?.id) || false
+})
+
+const hasUserRated = computed(() => {
+  if (!currentUser.value || !props.event.ratings) return false
+  return props.event.ratings.some(r => r.userId === currentUser.value.id)
 })
 
 const isActivityFull = computed(() => {
@@ -174,13 +192,18 @@ onMounted(() => {
         displayName: firebaseUser.displayName || firebaseUser.email
       }
       console.log('Firebase user detected in EventCard:', firebaseUser.email)
+      // Load user's existing rating
+      currentRating.value = getUserRating()
     } else if (localUser) {
       // Fall back to local storage user
       currentUser.value = localUser
       console.log('Local storage user detected in EventCard:', currentUser.value)
+      // Load user's existing rating
+      currentRating.value = getUserRating()
     } else {
       // No user found
       currentUser.value = null
+      currentRating.value = 0
     }
   })
 

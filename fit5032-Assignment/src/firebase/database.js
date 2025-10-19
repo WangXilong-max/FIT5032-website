@@ -250,26 +250,48 @@ export const getJoinedActivities = async (userId) => {
  */
 export const addRating = async (activityId, rating, userId) => {
   try {
+    console.log('addRating called with:', { activityId, rating, userId, ratingType: typeof rating })
+
     const activityRef = doc(db, 'activities', activityId)
     const activitySnap = await getDoc(activityRef)
 
     if (!activitySnap.exists()) {
-      console.error('Activity not found')
+      console.error('Activity not found:', activityId)
       return false
     }
 
     const activityData = activitySnap.data()
-    const ratings = activityData.ratings || []
+    console.log('Current activity data:', activityData)
 
-    // Add new rating
-    ratings.push({
-      rating: parseInt(rating),
-      userId,
-      timestamp: Date.now()
-    })
+    let ratings = activityData.ratings || []
+    console.log('Current ratings array:', ratings)
+
+    // Check if user has already rated this activity
+    const existingRatingIndex = ratings.findIndex(r => r.userId === userId)
+
+    if (existingRatingIndex !== -1) {
+      // Update existing rating
+      console.log('User has already rated, updating existing rating')
+      ratings[existingRatingIndex] = {
+        rating: parseInt(rating),
+        userId,
+        timestamp: Date.now()
+      }
+      console.log('Updated rating:', ratings[existingRatingIndex])
+    } else {
+      // Add new rating
+      const newRating = {
+        rating: parseInt(rating),
+        userId,
+        timestamp: Date.now()
+      }
+      ratings.push(newRating)
+      console.log('New rating to add:', newRating)
+    }
 
     // Calculate new average
     const averageRating = ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+    console.log('Calculated average:', averageRating)
 
     await updateDoc(activityRef, {
       ratings,
@@ -277,15 +299,13 @@ export const addRating = async (activityId, rating, userId) => {
       updatedAt: serverTimestamp()
     })
 
-    console.log('Rating added:', { activityId, rating, averageRating })
+    console.log('✅ Rating successfully saved to Firestore:', { activityId, rating, averageRating, totalRatings: ratings.length })
     return true
   } catch (error) {
-    console.error('Error adding rating:', error)
+    console.error('❌ Error adding rating:', error)
     return false
   }
-}
-
-// ==================== USERS COLLECTION ====================
+}// ==================== USERS COLLECTION ====================
 
 /**
  * Create or update user profile

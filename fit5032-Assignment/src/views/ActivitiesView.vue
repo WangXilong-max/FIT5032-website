@@ -4,8 +4,8 @@
       <div class="row mb-5">
         <div class="col-12">
           <div class="text-center mb-4">
-            <h2 class="display-4 fw-bold text-dark">Activity Display</h2>
-            <p class="lead text-muted">Following are the created activities</p>
+            <h2 class="display-4 fw-bold text-white">Activity Display</h2>
+            <p class="lead text-white">Following are the created activities</p>
             <router-link
               to="/create-activity"
               class="btn btn-primary btn-lg mt-3"
@@ -20,10 +20,10 @@
           <div v-for="event in events" :key="event.id" class="col-lg-6">
             <EventCard
               :event="event"
-              @delete="$emit('delete', $event)"
-              @rate="$emit('rate', $event)"
-              @join="$emit('join', $event)"
-              @leave="$emit('leave', $event)"
+              @delete="(eventId) => $emit('delete', eventId)"
+              @rate="(eventId, rating) => $emit('rate', eventId, rating)"
+              @join="(eventId) => $emit('join', eventId)"
+              @leave="(eventId) => $emit('leave', eventId)"
             />
           </div>
         </div>
@@ -45,7 +45,8 @@ const props = defineProps({
   events: Array
 })
 
-const emit = defineEmits(['delete', 'rate', 'join', 'leave'])
+// Define emits for parent component communication
+defineEmits(['delete', 'rate', 'join', 'leave'])
 
 onMounted(() => {
   console.log('ActivitiesView mounted, events received:', props.events?.length || 0)
@@ -53,7 +54,11 @@ onMounted(() => {
 })
 </script><style scoped>
 .bg-gradient-light {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+              url('/backgroundactivity.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
   min-height: 100vh;
 }
 

@@ -28,10 +28,10 @@
       <div class="row mb-5">
         <div class="col-12">
           <div class="text-center mb-4">
-            <h1 class="display-4 fw-bold text-dark">
+            <h1 class="display-4 fw-bold text-white">
               Create New Activity
             </h1>
-            <p class="lead text-muted">Plan your sports event with location mapping</p>
+            <p class="lead text-white">Plan your sports event with location mapping</p>
           </div>
         </div>
       </div>
@@ -673,7 +673,11 @@ onMounted(() => {
 
 <style scoped>
 .bg-gradient-light {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.6)),
+              url('/backgroundactivity.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
   min-height: 100vh;
 }
 

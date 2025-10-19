@@ -97,7 +97,7 @@ export default {
 }
 
 .card-header {
-  background: linear-gradient(135deg, #2c3e50, #34495e) !important;
+  background: #000000 !important;
   border: none;
   border-radius: 12px 12px 0 0 !important;
   padding: 1rem 1.5rem;

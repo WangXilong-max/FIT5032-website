@@ -88,24 +88,29 @@ const deleteEvent = async (eventId) => {
 
 const rateEvent = async (eventId, rating) => {
   const event = events.value.find(e => e.id === eventId)
-  if (!event || !rating || !currentUser.value) return
+  if (!event || !rating || !currentUser.value) {
+    console.log('Cannot rate:', { event: !!event, rating, currentUser: !!currentUser.value })
+    return
+  }
+
+  console.log('Rating event:', { eventId, rating, userId: currentUser.value.id })
 
   try {
     // Add rating to Firestore
     const { addRating } = await import('@/firebase/database')
-    await addRating(eventId, rating, currentUser.value.id)
+    const success = await addRating(eventId, rating, currentUser.value.id)
 
-    // Update local state
-    if (!event.ratings) event.ratings = []
-    event.ratings.push({
-      rating: parseInt(rating),
-      userId: currentUser.value.id,
-      timestamp: Date.now()
-    })
-    event.averageRating = event.ratings.reduce((sum, r) => sum + r.rating, 0) / event.ratings.length
+    if (!success) {
+      console.error('Failed to add rating to Firestore')
+      return
+    }
 
-    saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
-    console.log('Rating added successfully')
+    console.log('Rating added to Firestore successfully')
+
+    // Reload data from Firestore to get the updated ratings
+    await loadDataFromStorage()
+
+    console.log('Data reloaded from Firestore after rating')
   } catch (error) {
     console.error('Error rating event:', error)
   }
@@ -221,6 +226,25 @@ onMounted(() => {
       }
     }
   })
+
+  // Run migration on mount to add missing fields to old activities
+  const runMigration = async () => {
+    try {
+      const { migrateActivitiesToIncludeRatings } = await import('@/utils/migrateActivities')
+      const result = await migrateActivitiesToIncludeRatings()
+      console.log('Migration result:', result)
+
+      // Reload data after migration
+      if (result.updatedCount > 0) {
+        await loadDataFromStorage()
+      }
+    } catch (error) {
+      console.error('Migration error:', error)
+    }
+  }
+
+  // Run migration once
+  runMigration()
 
   onUnmounted(() => {
     window.removeEventListener('scroll', handleScroll)

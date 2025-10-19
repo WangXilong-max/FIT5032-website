@@ -341,7 +341,7 @@ export default {
   font-weight: 600;
   font-size: 0.85rem;
   padding: 0.6rem 0.75rem;
-  background: linear-gradient(135deg, #2c3e50, #34495e);
+  background: #000000;
   color: white;
   border: none;
 }
