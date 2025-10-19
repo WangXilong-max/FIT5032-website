@@ -6,6 +6,13 @@
           <div class="text-center mb-4">
             <h2 class="display-4 fw-bold text-dark">Activity Display</h2>
             <p class="lead text-muted">Following are the created activities</p>
+            <button
+              type="button"
+              class="btn btn-primary btn-lg mt-3"
+              @click="$emit('create-event')"
+            >
+              <i class="bi bi-plus-circle me-2"></i>Create New Activity
+            </button>
           </div>
         </div>
       </div>
@@ -36,7 +43,7 @@ defineProps({
   events: Array
 })
 
-defineEmits(['delete', 'rate'])
+defineEmits(['delete', 'rate', 'create-event'])
 </script><style scoped>
 .bg-gradient-light {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);

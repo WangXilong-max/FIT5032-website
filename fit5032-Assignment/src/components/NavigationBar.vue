@@ -19,6 +19,9 @@
             <router-link to="/activities" class="nav-link" active-class="active">Book Activities</router-link>
           </li>
           <li class="nav-item">
+            <router-link to="/dashboard" class="nav-link" active-class="active">Dashboard</router-link>
+          </li>
+          <li class="nav-item">
             <router-link to="/signin" class="nav-link" active-class="active">Login</router-link>
           </li>
           <li class="nav-item">
