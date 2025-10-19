@@ -28,3 +28,6 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# Firebase Functions (deploy separately to Firebase)
+/functions/
