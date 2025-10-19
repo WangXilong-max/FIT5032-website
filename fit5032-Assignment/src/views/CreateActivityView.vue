@@ -37,15 +37,15 @@
       </div>
 
       <!-- Form Content -->
-      <main id="main-content" role="main">
+      <main id="main-content">
         <div class="row justify-content-center">
           <div class="col-lg-10">
-            <form @submit.prevent="handleSubmit" role="form" aria-label="Create new activity form">
+            <form @submit.prevent="handleSubmit">
             <div class="row">
               <!-- Event Name -->
               <div class="col-md-6 mb-4">
                 <label for="eventName" class="form-label fw-bold">
-                  Event Name <span class="text-danger" aria-label="required field">*</span>
+                  Event Name <span class="text-danger">*</span>
                 </label>
                 <input
                   type="text"
@@ -55,12 +55,9 @@
                   @blur="touched.eventName = true; validateField('eventName')"
                   :class="{ 'is-invalid': touched.eventName && errors.eventName }"
                   placeholder="Enter event name"
-                  aria-required="true"
-                  aria-describedby="eventName-error eventName-hint"
-                  :aria-invalid="touched.eventName && errors.eventName ? 'true' : 'false'"
+                  required
                 >
-                <div id="eventName-hint" class="form-text">Enter a descriptive name for your sports activity</div>
-                <div v-if="touched.eventName && errors.eventName" id="eventName-error" class="invalid-feedback">
+                <div v-if="touched.eventName && errors.eventName" class="invalid-feedback">
                   {{ errors.eventName }}
                 </div>
               </div>
@@ -68,7 +65,7 @@
               <!-- Sport Category -->
               <div class="col-md-6 mb-4">
                 <label for="category" class="form-label fw-bold">
-                  Sport Category <span class="text-danger" aria-label="required field">*</span>
+                  Sport Category <span class="text-danger">*</span>
                 </label>
                 <select
                   class="form-select form-select-lg"
@@ -76,23 +73,20 @@
                   v-model="form.category"
                   @blur="touched.category = true; validateField('category')"
                   :class="{ 'is-invalid': touched.category && errors.category }"
-                  aria-required="true"
-                  aria-describedby="category-error category-hint"
-                  :aria-invalid="touched.category && errors.category ? 'true' : 'false'"
+                  required
                 >
                   <option value="">Select sport category</option>
                   <option v-for="category in categories" :key="category" :value="category">
                     {{ category }}
                   </option>
                 </select>
-                <div id="category-hint" class="form-text">Choose the type of sport for your activity</div>
-                <div v-if="touched.category && errors.category" id="category-error" class="invalid-feedback">
+                <div v-if="touched.category && errors.category" class="invalid-feedback">
                   {{ errors.category }}
                 </div>
               </div>                  <!-- Event Date -->
                   <div class="col-md-6 mb-4">
                     <label for="eventDate" class="form-label fw-bold">
-                      Event Date <span class="text-danger" aria-label="required field">*</span>
+                      Event Date <span class="text-danger">*</span>
                     </label>
                     <input
                       type="date"
@@ -102,12 +96,9 @@
                       @blur="touched.eventDate = true; validateField('eventDate')"
                       :class="{ 'is-invalid': touched.eventDate && errors.eventDate }"
                       :min="today"
-                      aria-required="true"
-                      aria-describedby="eventDate-error eventDate-hint"
-                      :aria-invalid="touched.eventDate && errors.eventDate ? 'true' : 'false'"
+                      required
                     >
-                    <div id="eventDate-hint" class="form-text">Select the date when your activity will take place</div>
-                    <div v-if="touched.eventDate && errors.eventDate" id="eventDate-error" class="invalid-feedback">
+                    <div v-if="touched.eventDate && errors.eventDate" class="invalid-feedback">
                       {{ errors.eventDate }}
                     </div>
                   </div>
@@ -115,7 +106,7 @@
                   <!-- Event Time -->
                   <div class="col-md-6 mb-4">
                     <label for="eventTime" class="form-label fw-bold">
-                      Event Time <span class="text-danger" aria-label="required field">*</span>
+                      Event Time <span class="text-danger">*</span>
                     </label>
                     <input
                       type="time"
@@ -124,12 +115,9 @@
                       v-model="form.eventTime"
                       @blur="touched.eventTime = true; validateField('eventTime')"
                       :class="{ 'is-invalid': touched.eventTime && errors.eventTime }"
-                      aria-required="true"
-                      aria-describedby="eventTime-error eventTime-hint"
-                      :aria-invalid="touched.eventTime && errors.eventTime ? 'true' : 'false'"
+                      required
                     >
-                    <div id="eventTime-hint" class="form-text">Select the time when your activity will start</div>
-                    <div v-if="touched.eventTime && errors.eventTime" id="eventTime-error" class="invalid-feedback">
+                    <div v-if="touched.eventTime && errors.eventTime" class="invalid-feedback">
                       {{ errors.eventTime }}
                     </div>
                   </div>
@@ -137,7 +125,7 @@
                   <!-- Location Section with Map -->
                   <div class="col-12 mb-4">
                     <label for="location" class="form-label fw-bold">
-                      Event Location <span class="text-danger" aria-label="required field">*</span>
+                      Event Location <span class="text-danger">*</span>
                     </label>
                     <div class="row">
                       <div class="col-md-8">
@@ -150,15 +138,9 @@
                           @input="searchLocation"
                           :class="{ 'is-invalid': touched.location && errors.location }"
                           placeholder="Search for location or enter address"
-                          aria-required="true"
-                          aria-describedby="location-error location-hint"
-                          :aria-invalid="touched.location && errors.location ? 'true' : 'false'"
-                          role="combobox"
-                          aria-expanded="false"
-                          aria-autocomplete="list"
+                          required
                         >
-                        <div id="location-hint" class="form-text">Enter the address where your activity will take place</div>
-                        <div v-if="touched.location && errors.location" id="location-error" class="invalid-feedback">
+                        <div v-if="touched.location && errors.location" class="invalid-feedback">
                           {{ errors.location }}
                         </div>
 
@@ -201,7 +183,7 @@
                   <!-- Max Participants -->
                   <div class="col-md-6 mb-4">
                     <label for="maxParticipants" class="form-label fw-bold">
-                      Max Participants <span class="text-danger" aria-label="required field">*</span>
+                      Max Participants <span class="text-danger">*</span>
                     </label>
                     <input
                       type="number"
@@ -213,12 +195,9 @@
                       placeholder="Enter number of participants"
                       min="1"
                       max="1000"
-                      aria-required="true"
-                      aria-describedby="maxParticipants-error maxParticipants-hint"
-                      :aria-invalid="touched.maxParticipants && errors.maxParticipants ? 'true' : 'false'"
+                      required
                     >
-                    <div id="maxParticipants-hint" class="form-text">Maximum number of people who can join (1-1000)</div>
-                    <div v-if="touched.maxParticipants && errors.maxParticipants" id="maxParticipants-error" class="invalid-feedback">
+                    <div v-if="touched.maxParticipants && errors.maxParticipants" class="invalid-feedback">
                       {{ errors.maxParticipants }}
                     </div>
                   </div>
@@ -266,29 +245,13 @@
                 <div class="row mt-4">
                   <div class="col-12">
                     <div class="d-flex gap-3 justify-content-center">
-                      <button
-                        type="button"
-                        class="btn btn-outline-secondary btn-lg px-5"
-                        @click="goBack"
-                        aria-describedby="cancel-help"
-                      >
-                        <i class="bi bi-arrow-left me-2" aria-hidden="true"></i>Cancel
+                      <button type="button" class="btn btn-outline-secondary btn-lg px-5" @click="goBack">
+                        <i class="bi bi-arrow-left me-2"></i>Cancel
                       </button>
-                      <div id="cancel-help" class="visually-hidden">Return to activities page without saving</div>
-
-                      <button
-                        type="submit"
-                        class="btn btn-primary btn-lg px-5"
-                        :disabled="!isFormValid || isSubmitting"
-                        :aria-describedby="isSubmitting ? 'submit-status' : 'submit-help'"
-                      >
-                        <i class="bi bi-check-circle me-2" aria-hidden="true"></i>
+                      <button type="submit" class="btn btn-primary btn-lg px-5" :disabled="!isFormValid || isSubmitting">
+                        <i class="bi bi-check-circle me-2"></i>
                         {{ isSubmitting ? 'Creating...' : 'Create Activity' }}
                       </button>
-                      <div id="submit-help" class="visually-hidden">Submit the form to create your activity</div>
-                      <div id="submit-status" class="visually-hidden" v-if="isSubmitting">
-                        Please wait while your activity is being created
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -311,8 +274,8 @@ import mapboxgl from 'mapbox-gl'
 
 const router = useRouter()
 
-// Emit events to parent
-const emit = defineEmits(['add-event'])
+// Define emits
+defineEmits(['add-event'])
 
 // User state
 const currentUser = ref(null)
@@ -611,8 +574,8 @@ const handleSubmit = async () => {
     existingEvents.unshift({ ...createdActivity, id: createdActivity.id })
     saveToLocalStorage(STORAGE_KEYS.EVENTS, existingEvents)
 
-    // Emit event to parent to update global state
-    emit('add-event', createdActivity)
+    // Note: Parent component will reload data from Firestore automatically
+    // No need to manually emit event
 
     // Success feedback
     alert('Activity created successfully!')
@@ -672,6 +635,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Color variables */
+:root {
+  --primary-color: #000000;
+  --primary-hover: #333333;
+  --border-color: #e9ecef;
+}
+
 .bg-gradient-light {
   background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.6)),
               url('/backgroundactivity.jpg');
@@ -681,12 +651,12 @@ onMounted(() => {
   min-height: 100vh;
 }
 
-/* Skip Link for Accessibility */
+/* Skip link for accessibility */
 .skip-link {
   position: absolute;
   top: -40px;
   left: 6px;
-  background: #000000;
+  background: var(--primary-color);
   color: white;
   padding: 8px;
   text-decoration: none;
@@ -698,54 +668,46 @@ onMounted(() => {
   top: 0;
 }
 
-/* Enhanced Focus Indicators */
+/* Form Labels - White Text */
+.form-label {
+  color: white !important;
+}
+
+/* Form Controls */
 .form-control:focus,
-.form-select:focus,
-.btn:focus {
-  border-color: #000000;
+.form-select:focus {
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
-  outline: 2px solid #000000;
-  outline-offset: 2px;
 }
 
-/* Visually Hidden Helper */
-.visually-hidden {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  padding: 0 !important;
-  margin: -1px !important;
-  overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
-}
-
+/* Buttons */
 .btn-primary {
-  background-color: #000000;
-  border-color: #000000;
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
 }
 
 .btn-primary:hover {
-  background-color: #333333;
-  border-color: #333333;
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
 }
 
 .btn-outline-primary {
-  color: #000000;
-  border-color: #000000;
+  color: var(--primary-color);
+  border-color: var(--primary-color);
 }
 
 .btn-outline-primary:hover {
-  background-color: #000000;
-  border-color: #000000;
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
 }
 
+/* Location Suggestions */
 .list-group-item:hover {
   background-color: #f8f9fa;
   cursor: pointer;
 }
 
+/* Map */
 .map-container {
   border-radius: 8px;
   overflow: hidden;
@@ -753,10 +715,11 @@ onMounted(() => {
 }
 
 #map {
-  border: 2px solid #e9ecef;
+  border: 2px solid var(--border-color);
   border-radius: 8px;
 }
 
+/* Responsive */
 @media (max-width: 768px) {
   .container {
     padding-left: 0.5rem;
