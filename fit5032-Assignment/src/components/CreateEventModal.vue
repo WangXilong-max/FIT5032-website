@@ -13,10 +13,10 @@
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label for="eventName" class="form-label fw-bold">Event Name <span class="text-danger">*</span></label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  id="eventName" 
+                <input
+                  type="text"
+                  class="form-control"
+                  id="eventName"
                   v-model="form.eventName"
                   @blur="touched.eventName = true; validateField('eventName')"
                   :class="{ 'is-invalid': touched.eventName && errors.eventName }"
@@ -27,9 +27,9 @@
 
               <div class="col-md-6 mb-3">
                 <label for="category" class="form-label fw-bold">Sport Category <span class="text-danger">*</span></label>
-                <select 
-                  class="form-select" 
-                  id="category" 
+                <select
+                  class="form-select"
+                  id="category"
                   v-model="form.category"
                   @blur="touched.category = true; validateField('category')"
                   :class="{ 'is-invalid': touched.category && errors.category }"
@@ -44,10 +44,10 @@
 
               <div class="col-md-6 mb-3">
                 <label for="eventDate" class="form-label fw-bold">Event Date <span class="text-danger">*</span></label>
-                <input 
-                  type="date" 
-                  class="form-control" 
-                  id="eventDate" 
+                <input
+                  type="date"
+                  class="form-control"
+                  id="eventDate"
                   v-model="form.eventDate"
                   @blur="touched.eventDate = true; validateField('eventDate')"
                   :class="{ 'is-invalid': touched.eventDate && errors.eventDate }"
@@ -57,10 +57,10 @@
 
               <div class="col-md-6 mb-3">
                 <label for="eventTime" class="form-label fw-bold">Event Time <span class="text-danger">*</span></label>
-                <input 
-                  type="time" 
-                  class="form-control" 
-                  id="eventTime" 
+                <input
+                  type="time"
+                  class="form-control"
+                  id="eventTime"
                   v-model="form.eventTime"
                   @blur="touched.eventTime = true; validateField('eventTime')"
                   :class="{ 'is-invalid': touched.eventTime && errors.eventTime }"
@@ -70,10 +70,10 @@
 
               <div class="col-12 mb-3">
                 <label for="location" class="form-label fw-bold">Event Location <span class="text-danger">*</span></label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  id="location" 
+                <input
+                  type="text"
+                  class="form-control"
+                  id="location"
                   v-model="form.location"
                   @blur="touched.location = true; validateField('location')"
                   :class="{ 'is-invalid': touched.location && errors.location }"
@@ -84,10 +84,10 @@
 
               <div class="col-md-6 mb-3">
                 <label for="maxParticipants" class="form-label fw-bold">Max Participants <span class="text-danger">*</span></label>
-                <input 
-                  type="number" 
-                  class="form-control" 
-                  id="maxParticipants" 
+                <input
+                  type="number"
+                  class="form-control"
+                  id="maxParticipants"
                   v-model="form.maxParticipants"
                   @blur="touched.maxParticipants = true; validateField('maxParticipants')"
                   :class="{ 'is-invalid': touched.maxParticipants && errors.maxParticipants }"
@@ -100,10 +100,10 @@
 
               <div class="col-md-6 mb-3">
                 <label for="ticketPrice" class="form-label fw-bold">Ticket Price ($) <span class="text-danger">*</span></label>
-                <input 
-                  type="number" 
-                  class="form-control" 
-                  id="ticketPrice" 
+                <input
+                  type="number"
+                  class="form-control"
+                  id="ticketPrice"
                   v-model="form.ticketPrice"
                   @blur="touched.ticketPrice = true; validateField('ticketPrice')"
                   :class="{ 'is-invalid': touched.ticketPrice && errors.ticketPrice }"
@@ -118,10 +118,10 @@
 
               <div class="col-12 mb-3">
                 <label for="contactEmail" class="form-label fw-bold">Contact Email <span class="text-danger">*</span></label>
-                <input 
-                  type="email" 
-                  class="form-control" 
-                  id="contactEmail" 
+                <input
+                  type="email"
+                  class="form-control"
+                  id="contactEmail"
                   v-model="form.contactEmail"
                   @blur="touched.contactEmail = true; validateField('contactEmail')"
                   :class="{ 'is-invalid': touched.contactEmail && errors.contactEmail }"
@@ -132,10 +132,10 @@
 
               <div class="col-12 mb-3">
                 <label for="description" class="form-label fw-bold">Event Description <span class="text-danger">*</span></label>
-                <textarea 
-                  class="form-control" 
-                  id="description" 
-                  rows="4" 
+                <textarea
+                  class="form-control"
+                  id="description"
+                  rows="4"
                   v-model="form.description"
                   @blur="touched.description = true; validateField('description')"
                   :class="{ 'is-invalid': touched.description && errors.description }"
@@ -174,6 +174,8 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'create'])
 
+const formFields = ['eventName', 'eventDate', 'eventTime', 'location', 'category', 'maxParticipants', 'ticketPrice', 'description', 'contactEmail']
+
 const form = ref({
   eventName: '',
   eventDate: '',
@@ -187,17 +189,7 @@ const form = ref({
 })
 
 const errors = ref({})
-const touched = ref({
-  eventName: false,
-  eventDate: false,
-  eventTime: false,
-  location: false,
-  category: false,
-  maxParticipants: false,
-  ticketPrice: false,
-  description: false,
-  contactEmail: false
-})
+const touched = ref(Object.fromEntries(formFields.map(field => [field, false])))
 
 const validators = {
   eventName: () => {
@@ -244,8 +236,7 @@ const validators = {
 }
 
 const validateField = (field) => {
-  const message = validators[field]()
-  errors.value = { ...errors.value, [field]: message }
+  errors.value[field] = validators[field]()
 }
 
 const validateForm = () => {
@@ -273,44 +264,14 @@ const handleSubmit = () => {
     emit('create', eventData)
     resetForm()
   } else {
-    touched.value = {
-      eventName: true,
-      eventDate: true,
-      eventTime: true,
-      location: true,
-      category: true,
-      maxParticipants: true,
-      ticketPrice: true,
-      description: true,
-      contactEmail: true
-    }
+    touched.value = Object.fromEntries(formFields.map(field => [field, true]))
   }
 }
 
 const resetForm = () => {
-  form.value = {
-    eventName: '',
-    eventDate: '',
-    eventTime: '',
-    location: '',
-    category: '',
-    maxParticipants: '',
-    ticketPrice: '',
-    description: '',
-    contactEmail: ''
-  }
+  form.value = Object.fromEntries(formFields.map(field => [field, '']))
   errors.value = {}
-  touched.value = {
-    eventName: false,
-    eventDate: false,
-    eventTime: false,
-    location: false,
-    category: false,
-    maxParticipants: false,
-    ticketPrice: false,
-    description: false,
-    contactEmail: false
-  }
+  touched.value = Object.fromEntries(formFields.map(field => [field, false]))
 }
 
 watch(() => props.show, (newVal) => {

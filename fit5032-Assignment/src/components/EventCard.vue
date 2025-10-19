@@ -10,8 +10,7 @@
         <small class="text-muted">
           <i class="bi bi-calendar me-1"></i>{{ event.date }}
         </small>
-        <button v-if="canDelete" 
-                class="btn btn-outline-danger btn-sm" 
+        <button class="btn btn-outline-danger btn-sm"
                 @click="$emit('delete', event.id)"
                 title="Delete Event">
           <i class="bi bi-trash"></i>
@@ -21,7 +20,7 @@
     <div class="card-body">
       <h5 class="card-title fw-bold">{{ event.name }}</h5>
       <p class="card-text text-muted">{{ event.description }}</p>
-      
+
       <div class="row g-2 mb-3">
         <div class="col-6">
           <small class="text-muted">
@@ -34,27 +33,22 @@
           </small>
         </div>
         <div class="col-6">
-          <small class="text-muted">
-            <i class="bi bi-person me-1"></i>{{ event.organizer }}
-          </small>
-        </div>
-        <div class="col-6">
           <small class="text-primary fw-bold">
             <i class="bi bi-currency-dollar me-1"></i>{{ event.price === 0 ? 'Free' : `$${event.price}` }}
           </small>
         </div>
-      </div>
-      <div class="mb-3">
-        <div class="text-center">
-          <small class="text-muted">{{ event.participants }}/{{ event.maxParticipants }} participants</small>
+        <div class="col-6">
+          <small class="text-muted">
+            <i class="bi bi-person me-1"></i>{{ event.participants }}/{{ event.maxParticipants }}
+          </small>
         </div>
       </div>
-      
+
       <div class="mb-3" v-if="event.ratings && event.ratings.length > 0">
         <div class="d-flex align-items-center justify-content-between">
           <div class="d-flex align-items-center">
             <span class="me-2">
-              <i v-for="n in 5" :key="n" 
+              <i v-for="n in 5" :key="n"
                  :class="n <= Math.round(event.averageRating) ? 'bi bi-star-fill text-warning' : 'bi bi-star text-muted'"
                  style="font-size: 0.8rem;"></i>
             </span>
@@ -63,54 +57,42 @@
           <small class="text-muted">({{ event.ratings.length }} reviews)</small>
         </div>
       </div>
-      
-      <div class="mb-3" v-if="currentUser">
+
+      <div class="mb-3">
         <div class="text-center">
           <small class="text-muted d-block mb-1">Rate this event:</small>
           <div>
-            <i v-for="n in 5" :key="n" 
-               :class="n <= userRating ? 'bi bi-star-fill text-warning' : 'bi bi-star text-muted'"
-               @click="$emit('rate', event.id, n)"
+            <i v-for="n in 5" :key="n"
+               :class="n <= currentRating ? 'bi bi-star-fill text-warning' : 'bi bi-star text-muted'"
+               @click="handleRate(n)"
                style="cursor: pointer; font-size: 1rem; margin: 0 1px;"></i>
           </div>
         </div>
       </div>
     </div>
     <div class="card-footer bg-transparent">
-      <button class="btn btn-primary btn-sm w-100" v-if="currentUser" :disabled="!isUser">
+      <button class="btn btn-primary btn-sm w-100">
         <i class="bi bi-person-plus me-1"></i>Join Event
-      </button>
-      <button class="btn btn-secondary btn-sm w-100" v-if="!currentUser" @click="$emit('login-required')">
-        <i class="bi bi-lock me-1"></i>Login to Join
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref } from 'vue'
 
 const props = defineProps({
-  event: Object,
-  currentUser: Object,
-  isUser: Boolean,
-  isAdmin: Boolean
+  event: Object
 })
 
-const emit = defineEmits(['delete', 'rate', 'login-required'])
+const emit = defineEmits(['delete', 'rate'])
 
-const canDelete = computed(() => {
-  if (!props.currentUser) return false
-  return props.isAdmin || 
-         (props.isUser && (props.event.organizerId === props.currentUser.id || 
-                          props.event.organizer === props.currentUser.username))
-})
+const currentRating = ref(0)
 
-const userRating = computed(() => {
-  if (!props.currentUser || !props.event.ratings) return 0
-  const rating = props.event.ratings.find(r => r.userId === props.currentUser.id)
-  return rating ? rating.rating : 0
-})
+const handleRate = (rating) => {
+  currentRating.value = rating
+  emit('rate', props.event.id, rating)
+}
 </script>
 
 <style scoped>

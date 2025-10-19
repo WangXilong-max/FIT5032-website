@@ -1,34 +1,22 @@
 <template>
   <nav class="navbar navbar-expand-lg navbar-dark fixed-top" :class="{ 'navbar-scrolled': isScrolled }">
     <div class="container">
-      <a class="navbar-brand fw-bold" href="#">
+      <router-link to="/" class="navbar-brand fw-bold">
         <span class="brand-text">SportSync</span>
-      </a>
+      </router-link>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item">
-            <a class="nav-link" href="#hero">Home</a>
+            <router-link to="/" class="nav-link" active-class="active">Home</router-link>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#news">Sports News</a>
+            <router-link to="/news" class="nav-link" active-class="active">Sports News</router-link>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#activities">Book Activities</a>
-          </li>
-          <li class="nav-item" v-if="isAdmin">
-            <a class="nav-link" href="#admin">Admin Panel</a>
-          </li>
-          <li class="nav-item" v-if="currentUser">
-            <span class="nav-link">Hello, {{ currentUser.username }} ({{ currentUser.role }})</span>
-          </li>
-          <li class="nav-item" v-if="currentUser">
-            <button class="btn btn-outline-light btn-sm" @click="$emit('logout')">Logout</button>
-          </li>
-          <li class="nav-item" v-if="!currentUser">
-            <button class="btn btn-outline-light btn-sm" @click="$emit('show-auth')">Login</button>
+            <router-link to="/activities" class="nav-link" active-class="active">Book Activities</router-link>
           </li>
         </ul>
       </div>
@@ -38,12 +26,8 @@
 
 <script setup>
 defineProps({
-  currentUser: Object,
-  isAdmin: Boolean,
   isScrolled: Boolean
 })
-
-defineEmits(['logout', 'show-auth'])
 </script>
 
 <style scoped>
@@ -61,5 +45,15 @@ defineEmits(['logout', 'show-auth'])
   color: #fff !important;
   font-size: 1.5rem;
   font-weight: bold;
+}
+
+.nav-link.active {
+  color: #fff !important;
+  font-weight: 600;
+  border-bottom: 2px solid #fff;
+}
+
+.navbar-brand {
+  text-decoration: none;
 }
 </style>

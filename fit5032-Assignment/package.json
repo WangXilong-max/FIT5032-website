@@ -15,7 +15,8 @@
   },
   "dependencies": {
     "bootstrap": "^5.3.2",
-    "vue": "^3.5.18"
+    "vue": "^3.5.18",
+    "vue-router": "^4.6.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.31.0",
