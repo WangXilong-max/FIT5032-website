@@ -89,14 +89,12 @@ export default {
       const result = await registerUser(email.value, password.value)
 
       if (result.success) {
-        console.log('Registration successful:', result.user)
         success.value = true
         // Redirect to homepage after 2 seconds
         setTimeout(() => {
           router.push('/')
         }, 2000)
       } else {
-        console.error('Registration error details:', result.error)
         error.value = getErrorMessage(result.error)
       }
 
@@ -104,7 +102,6 @@ export default {
     }
 
     const getErrorMessage = (errorMessage) => {
-      console.log('Error message:', errorMessage)
       if (errorMessage.includes('email-already-in-use')) {
         return 'This email is already registered'
       } else if (errorMessage.includes('weak-password')) {

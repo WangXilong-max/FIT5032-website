@@ -7,8 +7,6 @@ import { db } from '@/firebase/config'
  */
 export const migrateActivitiesToIncludeRatings = async () => {
   try {
-    console.log('Starting migration: Adding ratings fields to activities...')
-
     const activitiesRef = collection(db, 'activities')
     const snapshot = await getDocs(activitiesRef)
 
@@ -18,7 +16,6 @@ export const migrateActivitiesToIncludeRatings = async () => {
     for (const docSnapshot of snapshot.docs) {
       const data = docSnapshot.data()
 
-      // Check if ratings field is missing
       if (!('ratings' in data) || !('averageRating' in data)) {
         const activityRef = doc(db, 'activities', docSnapshot.id)
 
@@ -28,14 +25,11 @@ export const migrateActivitiesToIncludeRatings = async () => {
         })
 
         updatedCount++
-        console.log(`✅ Updated activity: ${docSnapshot.id}`)
       } else {
         skippedCount++
-        console.log(`⏭️  Skipped activity: ${docSnapshot.id} (already has ratings field)`)
       }
     }
 
-    console.log(`Migration complete! Updated: ${updatedCount}, Skipped: ${skippedCount}`)
     return { updatedCount, skippedCount, total: snapshot.docs.length }
   } catch (error) {
     console.error('Migration failed:', error)

@@ -160,14 +160,6 @@ export default {
         regionalChartData.value = generateRegionalChart(regionalData.value)
         ageChartData.value = generateAgeChart(ageDistributionData.value)
         genderChartData.value = generateGenderChart(genderAnalysisData.value)
-
-        console.log('Dashboard data loaded from Firestore')
-        console.log('Chart data generated:', {
-          annual: annualTrendsChartData.value,
-          regional: regionalChartData.value,
-          age: ageChartData.value,
-          gender: genderChartData.value
-        })
       } catch (error) {
         console.error('Error loading dashboard data:', error)
       }

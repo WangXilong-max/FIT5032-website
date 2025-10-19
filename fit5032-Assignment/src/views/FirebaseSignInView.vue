@@ -64,7 +64,6 @@ export default {
       const result = await loginUser(email.value, password.value)
 
       if (result.success) {
-        console.log('Sign in successful:', result.user)
         router.push('/')
       } else {
         error.value = getErrorMessage(result.error)

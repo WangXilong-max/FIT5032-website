@@ -17,7 +17,7 @@
       </div>
       <div>
         <div class="row g-4" v-if="events.length > 0">
-          <div v-for="event in events" :key="event.id" class="col-lg-6">
+          <div v-for="event in events" :key="event.id" class="col-lg-4 col-md-6">
             <EventCard
               :event="event"
               @delete="(eventId) => $emit('delete', eventId)"
@@ -49,8 +49,6 @@ const props = defineProps({
 defineEmits(['delete', 'rate', 'join', 'leave'])
 
 onMounted(() => {
-  console.log('ActivitiesView mounted, events received:', props.events?.length || 0)
-  console.log('Events data:', props.events)
 })
 </script><style scoped>
 .bg-gradient-light {

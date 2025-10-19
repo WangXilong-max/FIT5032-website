@@ -322,10 +322,6 @@ export default {
   transition: background-color 0.15s ease;
 }
 
-.sortable:hover {
-  background-color: rgba(255, 255, 255, 0.15) !important;
-}
-
 .sort-indicator {
   margin-left: 0.4rem;
   font-size: 0.75rem;

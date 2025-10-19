@@ -49,6 +49,9 @@ import { sportsNews } from '../data/sportsData.js'
   background: #ffffff !important;
   border: 1px solid #dee2e6;
   box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .news-image {
@@ -56,17 +59,27 @@ import { sportsNews } from '../data/sportsData.js'
   height: 250px !important;
   object-fit: cover !important;
   object-position: center !important;
+  flex-shrink: 0;
 }
 
 .news-content {
-  height: 180px !important;
+  display: flex;
+  flex-direction: column;
   padding: 1.5rem !important;
+  flex: 1;
+}
+
+.news-content p {
+  flex: 1;
   overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 @media (max-width: 768px) {
   .news-content {
-    height: 140px;
     padding: 1rem;
   }
 

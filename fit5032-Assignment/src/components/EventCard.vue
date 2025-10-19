@@ -1,129 +1,106 @@
 <template>
   <div class="card event-card h-100">
-    <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="card-header d-flex justify-content-between align-items-start">
       <div>
-        <span class="badge bg-dark text-white rounded-pill">{{ event.category }}</span>
-        <span class="badge bg-dark text-white rounded-pill ms-2" v-if="event.status === 'upcoming'">Upcoming</span>
-        <span class="badge bg-dark text-white rounded-pill ms-2" v-else-if="event.status === 'ongoing'">Ongoing</span>
+        <span class="badge bg-dark text-white rounded-pill" style="font-size: 0.7rem;">{{ event.category }}</span>
       </div>
-      <div class="d-flex align-items-center gap-2">
-        <small class="text-muted">
-          <i class="bi bi-calendar me-1"></i>{{ event.date }}
-        </small>
-  <button v-if="isCreator" class="btn btn-outline-danger btn-sm"
-    @click="$emit('delete', event.id)"
-    title="Delete Event">
-    <i class="bi bi-trash"></i>
-  </button>
-      </div>
+      <small class="text-muted" style="font-size: 0.75rem;">{{ event.date }}</small>
+      <button v-if="isCreator" class="btn btn-outline-danger btn-xs p-1"
+        @click="$emit('delete', event.id)"
+        aria-label="Delete event"
+        style="font-size: 0.65rem;">
+        <i class="bi bi-trash" aria-hidden="true" style="font-size: 0.75rem;"></i>
+      </button>
     </div>
-    <div class="card-body">
-      <h5 class="card-title fw-bold">{{ event.name }}</h5>
-      <p class="card-text text-muted">{{ event.description }}</p>
+    <div class="card-body pb-2">
+      <h6 class="card-title fw-bold mb-1">{{ event.name }}</h6>
+      <p class="card-text text-muted" style="font-size: 0.85rem; margin-bottom: 0.5rem;">{{ event.description }}</p>
 
-      <div class="row g-2 mb-3">
-        <div class="col-6">
-          <small class="text-muted">
-            <i class="bi bi-clock me-1"></i>{{ event.time }}
-          </small>
-        </div>
-        <div class="col-6">
-          <small class="text-muted">
-            <i class="bi bi-geo-alt me-1"></i>{{ event.location }}
-          </small>
-        </div>
-        <div class="col-6">
-          <small class="text-primary fw-bold">
-            <i class="bi bi-currency-dollar me-1"></i>{{ event.price === 0 ? 'Free' : `$${event.price}` }}
-          </small>
-        </div>
-        <div class="col-6">
-          <small class="text-muted">
-            <i class="bi bi-person me-1"></i>{{ event.participantCount || 0 }}/{{ event.maxParticipants }}
-          </small>
-        </div>
+      <div style="font-size: 0.8rem; margin-bottom: 0.5rem;">
+        <small class="text-muted d-block">
+          <i class="bi bi-clock me-1"></i>{{ event.time }}
+        </small>
+        <small class="text-muted d-block">
+          <i class="bi bi-geo-alt me-1"></i>{{ event.location }}
+        </small>
+        <small class="text-muted d-block">
+          <i class="bi bi-person me-1"></i>{{ event.participantCount || 0 }}/{{ event.maxParticipants }}
+        </small>
       </div>
 
-      <div class="mb-3" v-if="event.ratings && event.ratings.length > 0">
+      <div class="mb-2" v-if="event.ratings && event.ratings.length > 0">
         <div class="d-flex align-items-center justify-content-between">
           <div class="d-flex align-items-center">
-            <span class="me-2">
+            <span class="me-1">
               <i v-for="n in 5" :key="n"
                  :class="n <= Math.round(event.averageRating) ? 'bi bi-star-fill text-warning' : 'bi bi-star text-muted'"
-                 style="font-size: 0.8rem;"></i>
+                 style="font-size: 0.7rem;"></i>
             </span>
-            <small class="text-muted">{{ event.averageRating.toFixed(1) }}</small>
+            <small class="text-muted" style="font-size: 0.75rem;">{{ event.averageRating.toFixed(1) }}</small>
           </div>
-          <small class="text-muted">({{ event.ratings.length }} reviews)</small>
+          <small class="text-muted" style="font-size: 0.75rem;">({{ event.ratings.length }})</small>
         </div>
       </div>
 
-      <div class="mb-3">
-        <div class="text-center">
-          <small class="text-muted d-block mb-1">
-            {{ hasUserRated ? 'Your rating (click to update):' : 'Rate this event:' }}
-          </small>
-          <div>
-            <i v-for="n in 5" :key="n"
-               :class="n <= currentRating ? 'bi bi-star-fill text-warning' : 'bi bi-star text-muted'"
-               @click="handleRate(n)"
-               style="cursor: pointer; font-size: 1rem; margin: 0 1px;"></i>
-          </div>
-          <small v-if="hasUserRated" class="text-success d-block mt-1">
-            <i class="bi bi-check-circle"></i> You rated this {{ currentRating }} star{{ currentRating > 1 ? 's' : '' }}
-          </small>
+      <div class="mb-2">
+        <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">
+          {{ currentUser ? (hasUserRated ? 'You rated:' : 'Rate:') : 'Login to rate' }}
+        </small>
+        <div style="font-size: 0.9rem;">
+          <i v-for="n in 5" :key="n"
+             :class="n <= currentRating ? 'bi bi-star-fill text-warning' : 'bi bi-star text-muted'"
+             @click="handleRate(n)"
+             :aria-label="`Rate ${n} stars`"
+             role="button"
+             tabindex="0"
+             @keydown.enter="handleRate(n)"
+             @keydown.space="handleRate(n)"
+             :style="{ cursor: currentUser ? 'pointer' : 'not-allowed', margin: '0 1px', opacity: currentUser ? '1' : '0.5' }"></i>
         </div>
       </div>
     </div>
-    <div class="card-footer bg-transparent">
+    <div class="card-footer bg-transparent border-top-0 pt-2">
       <!-- View Details Button -->
-      <div class="mb-2">
-        <router-link
-          :to="`/activities/${event.id}`"
-          class="btn btn-outline-primary btn-sm w-100"
-        >
-          <i class="bi bi-info-circle me-1"></i>View Details
-        </router-link>
-      </div>
+      <router-link
+        :to="`/activities/${event.id}`"
+        class="btn btn-outline-primary btn-sm w-100 mb-2"
+        style="font-size: 0.85rem; padding: 0.4rem 0.75rem;"
+      >
+        <i class="bi bi-arrow-right me-1"></i>Check Detail
+      </router-link>
 
-      <!-- Join/Leave button - only show if user is logged in and activity is not full -->
+      <!-- Join/Leave button -->
       <div v-if="currentUser">
-        <!-- Creator view - just show status -->
         <div v-if="isCreator">
-          <button class="btn btn-secondary btn-sm w-100" disabled>
-            <i class="bi bi-person-check me-1"></i>Your Event ({{ event.participantCount || 0 }}/{{ event.maxParticipants }})
+          <button class="btn btn-secondary btn-sm w-100" disabled style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+            <i class="bi bi-person-check me-1"></i>{{ event.participantCount || 0 }}/{{ event.maxParticipants }}
           </button>
         </div>
-        <!-- Non-creator buttons -->
         <div v-else>
           <button
-            v-if="!isUserJoined && !isActivityFull"
-            class="btn btn-success btn-sm w-100"
-            @click="joinEvent"
-          >
-            <i class="bi bi-person-plus me-1"></i>Join Event
-          </button>
-          <button
-            v-else-if="isUserJoined"
+            v-if="isUserJoined"
             class="btn btn-outline-danger btn-sm w-100"
-            @click="leaveEvent"
+            @click="$emit('leave', event.id)"
+            :disabled="actionLoading"
+            style="font-size: 0.8rem; padding: 0.35rem 0.75rem;"
           >
-            <i class="bi bi-person-dash me-1"></i>Leave Event
+            <i class="bi bi-person-x me-1"></i>{{ actionLoading ? 'Leaving...' : 'Leave' }}
           </button>
           <button
-            v-else-if="isActivityFull"
-            class="btn btn-secondary btn-sm w-100"
-            disabled
+            v-else
+            class="btn btn-primary btn-sm w-100"
+            @click="$emit('join', event.id)"
+            :disabled="actionLoading || isFull"
+            style="font-size: 0.8rem; padding: 0.35rem 0.75rem;"
           >
-            <i class="bi bi-people-fill me-1"></i>Event Full
+            <i class="bi bi-person-plus me-1"></i>{{ actionLoading ? 'Joining...' : isFull ? 'Full' : 'Join' }}
           </button>
         </div>
       </div>
-      <!-- Not logged in message -->
       <div v-else>
-        <router-link to="/signin" class="btn btn-outline-primary btn-sm w-100">
-          <i class="bi bi-box-arrow-in-right me-1"></i>Sign In to Join
-        </router-link>
+        <button class="btn btn-primary btn-sm w-100" disabled style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+          <i class="bi bi-lock me-1"></i>Login to Join
+        </button>
       </div>
     </div>
   </div>
@@ -142,6 +119,7 @@ const emit = defineEmits(['delete', 'rate', 'join', 'leave'])
 
 const currentRating = ref(0)
 const currentUser = ref(null)
+const actionLoading = ref(false)
 
 // Check if current user has already rated this activity
 const getUserRating = () => {
@@ -169,8 +147,16 @@ const isCreator = computed(() => {
   return props.event.creatorId === currentUser.value?.id
 })
 
+const isFull = computed(() => {
+  return isActivityFull.value
+})
+
 // Methods
 const handleRate = (rating) => {
+  if (!currentUser.value) {
+    alert('Please sign in to rate this event')
+    return
+  }
   currentRating.value = rating
   emit('rate', props.event.id, rating)
 }
@@ -197,23 +183,16 @@ onMounted(() => {
   // Set up Firebase auth state listener
   const unsubscribe = onAuthStateChange((firebaseUser) => {
     if (firebaseUser) {
-      // User is signed in with Firebase
       currentUser.value = {
         id: firebaseUser.uid,
         email: firebaseUser.email,
         displayName: firebaseUser.displayName || firebaseUser.email
       }
-      console.log('Firebase user detected in EventCard:', firebaseUser.email)
-      // Load user's existing rating
       currentRating.value = getUserRating()
     } else if (localUser) {
-      // Fall back to local storage user
       currentUser.value = localUser
-      console.log('Local storage user detected in EventCard:', currentUser.value)
-      // Load user's existing rating
       currentRating.value = getUserRating()
     } else {
-      // No user found
       currentUser.value = null
       currentRating.value = 0
     }
@@ -229,18 +208,38 @@ onMounted(() => {
 <style scoped>
 .event-card {
   border: none;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
   overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.event-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .event-card .card-header {
-  background: linear-gradient(45deg, #f8f9fa, #ffffff);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  padding: 0.75rem;
+}
+
+.event-card .card-body {
+  padding: 0.75rem;
+}
+
+.event-card .card-footer {
+  padding: 0.5rem;
 }
 
 .badge {
-  font-size: 0.75rem;
-  padding: 0.5em 0.75em;
+  font-size: 0.7rem;
+  padding: 0.35em 0.5em;
+}
+
+.btn-xs {
+  padding: 0.2rem 0.4rem;
+  font-size: 0.65rem;
 }
 </style>

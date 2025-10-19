@@ -6,7 +6,7 @@
           <h5 class="modal-title">
             <i class="bi bi-plus-circle me-2"></i>Create New Event
           </h5>
-          <button type="button" class="btn-close btn-close-white" @click="$emit('close')"></button>
+          <button type="button" class="btn-close btn-close-white" @click="$emit('close')" aria-label="Close modal"></button>
         </div>
         <div class="modal-body">
           <form @submit.prevent="handleSubmit">
@@ -22,7 +22,7 @@
                   :class="{ 'is-invalid': touched.eventName && errors.eventName }"
                   placeholder="Enter event name"
                 >
-                <div v-if="touched.eventName && errors.eventName" class="invalid-feedback">{{ errors.eventName }}</div>
+                <div v-if="touched.eventName && errors.eventName" class="invalid-feedback" role="alert">{{ errors.eventName }}</div>
               </div>
 
               <div class="col-md-6 mb-3">
@@ -39,7 +39,7 @@
                     {{ category }}
                   </option>
                 </select>
-                <div v-if="touched.category && errors.category" class="invalid-feedback">{{ errors.category }}</div>
+                <div v-if="touched.category && errors.category" class="invalid-feedback" role="alert">{{ errors.category }}</div>
               </div>
 
               <div class="col-md-6 mb-3">
@@ -52,7 +52,7 @@
                   @blur="touched.eventDate = true; validateField('eventDate')"
                   :class="{ 'is-invalid': touched.eventDate && errors.eventDate }"
                 >
-                <div v-if="touched.eventDate && errors.eventDate" class="invalid-feedback">{{ errors.eventDate }}</div>
+                <div v-if="touched.eventDate && errors.eventDate" class="invalid-feedback" role="alert">{{ errors.eventDate }}</div>
               </div>
 
               <div class="col-md-6 mb-3">
@@ -65,7 +65,7 @@
                   @blur="touched.eventTime = true; validateField('eventTime')"
                   :class="{ 'is-invalid': touched.eventTime && errors.eventTime }"
                 >
-                <div v-if="touched.eventTime && errors.eventTime" class="invalid-feedback">{{ errors.eventTime }}</div>
+                <div v-if="touched.eventTime && errors.eventTime" class="invalid-feedback" role="alert">{{ errors.eventTime }}</div>
               </div>
 
               <div class="col-12 mb-3">
@@ -79,7 +79,7 @@
                   :class="{ 'is-invalid': touched.location && errors.location }"
                   placeholder="Enter detailed address"
                 >
-                <div v-if="touched.location && errors.location" class="invalid-feedback">{{ errors.location }}</div>
+                <div v-if="touched.location && errors.location" class="invalid-feedback" role="alert">{{ errors.location }}</div>
               </div>
 
               <div class="col-md-6 mb-3">
@@ -95,7 +95,7 @@
                   min="1"
                   max="1000"
                 >
-                <div v-if="touched.maxParticipants && errors.maxParticipants" class="invalid-feedback">{{ errors.maxParticipants }}</div>
+                <div v-if="touched.maxParticipants && errors.maxParticipants" class="invalid-feedback" role="alert">{{ errors.maxParticipants }}</div>
               </div>
 
               <div class="col-md-6 mb-3">
@@ -112,7 +112,7 @@
                   max="10000"
                   step="0.01"
                 >
-                <div v-if="touched.ticketPrice && errors.ticketPrice" class="invalid-feedback">{{ errors.ticketPrice }}</div>
+                <div v-if="touched.ticketPrice && errors.ticketPrice" class="invalid-feedback" role="alert">{{ errors.ticketPrice }}</div>
                 <div class="form-text">Enter 0 for free events</div>
               </div>
 
@@ -127,7 +127,7 @@
                   :class="{ 'is-invalid': touched.contactEmail && errors.contactEmail }"
                   placeholder="example@email.com"
                 >
-                <div v-if="touched.contactEmail && errors.contactEmail" class="invalid-feedback">{{ errors.contactEmail }}</div>
+                <div v-if="touched.contactEmail && errors.contactEmail" class="invalid-feedback" role="alert">{{ errors.contactEmail }}</div>
               </div>
 
               <div class="col-12 mb-3">
@@ -141,7 +141,7 @@
                   :class="{ 'is-invalid': touched.description && errors.description }"
                   placeholder="Please describe the event details, rules, and important notes"
                 ></textarea>
-                <div v-if="touched.description && errors.description" class="invalid-feedback">{{ errors.description }}</div>
+                <div v-if="touched.description && errors.description" class="invalid-feedback" role="alert">{{ errors.description }}</div>
                 <div class="form-text">{{ form.description.length }}/1000 characters</div>
               </div>
             </div>

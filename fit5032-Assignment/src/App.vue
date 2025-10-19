@@ -20,11 +20,8 @@ provide('appState', {
 // Data loading
 const loadDataFromStorage = async () => {
   try {
-    // Load from Firestore
     const { getAllActivities } = await import('@/firebase/database')
     const firestoreEvents = await getAllActivities()
-
-    console.log('Loading events from Firestore:', firestoreEvents.length, 'events found')
 
     if (firestoreEvents.length > 0) {
       events.value = firestoreEvents.map(event => ({
@@ -35,12 +32,9 @@ const loadDataFromStorage = async () => {
         participantCount: event.participantCount || 0
       }))
 
-      // Save to localStorage as backup
       saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
     } else {
-      // Fallback to localStorage if Firestore is empty
       const savedEvents = loadFromLocalStorage(STORAGE_KEYS.EVENTS, [])
-      console.log('Fallback to localStorage:', savedEvents.length, 'events found')
 
       events.value = savedEvents.map(event => ({
         ...event,
@@ -50,11 +44,8 @@ const loadDataFromStorage = async () => {
         participantCount: event.participantCount || 0
       }))
     }
-
-    console.log('Final events array:', events.value)
   } catch (error) {
     console.error('Error loading data:', error)
-    // Fallback to localStorage on error
     const savedEvents = loadFromLocalStorage(STORAGE_KEYS.EVENTS, [])
     events.value = savedEvents
   }
@@ -68,32 +59,30 @@ const addEventToData = (newEvent) => {
 }
 
 const deleteEvent = async (eventId) => {
-  if (confirm('Are you sure you want to delete this event?')) {
-    try {
-      // Delete from Firestore
-      const { deleteActivity } = await import('@/firebase/database')
-      await deleteActivity(eventId)
-
-      // Update local state
-      events.value = events.value.filter(e => e.id !== eventId)
-      saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
-
-      console.log('Event deleted successfully')
-    } catch (error) {
-      console.error('Error deleting event:', error)
-      alert('Failed to delete event. Please try again.')
-    }
+  const event = events.value.find(e => e.id === eventId)
+  if (!event || event.creatorId !== currentUser.value?.id) {
+    alert('Only creator can delete this event')
+    return
+  }
+  
+  if (!confirm('Delete this event?')) return
+  
+  try {
+    const { deleteActivity } = await import('@/firebase/database')
+    await deleteActivity(eventId)
+    events.value = events.value.filter(e => e.id !== eventId)
+    saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
+  } catch (error) {
+    console.error('Error deleting event:', error)
+    alert('Failed to delete event')
   }
 }
 
 const rateEvent = async (eventId, rating) => {
   const event = events.value.find(e => e.id === eventId)
   if (!event || !rating || !currentUser.value) {
-    console.log('Cannot rate:', { event: !!event, rating, currentUser: !!currentUser.value })
     return
   }
-
-  console.log('Rating event:', { eventId, rating, userId: currentUser.value.id })
 
   try {
     // Add rating to Firestore
@@ -105,86 +94,80 @@ const rateEvent = async (eventId, rating) => {
       return
     }
 
-    console.log('Rating added to Firestore successfully')
-
     // Reload data from Firestore to get the updated ratings
     await loadDataFromStorage()
 
-    console.log('Data reloaded from Firestore after rating')
   } catch (error) {
     console.error('Error rating event:', error)
   }
 }
 
 const joinEvent = async (eventId) => {
-  // Use the global currentUser instead of loading from storage
-  if (!currentUser.value) {
-    console.log('No user logged in')
-    return
-  }
+  if (!currentUser.value) return
 
-  console.log('Joining event with user ID:', currentUser.value.id)
+  const event = events.value.find(e => e.id === eventId)
+  if (!event) return
 
   try {
-    // Join activity in Firestore
     const { joinActivity } = await import('@/firebase/database')
     await joinActivity(eventId, currentUser.value.id)
 
-    // Update local state
-    events.value = events.value.map(event => {
-      if (event.id === eventId) {
-        if (!event.participants) event.participants = []
-        if (!event.participants.includes(currentUser.value.id)) {
-          console.log('Adding user to participants:', currentUser.value.id)
-          return {
-            ...event,
-            participants: [...event.participants, currentUser.value.id],
-            participantCount: event.participants.length + 1
-          }
-        } else {
-          console.log('User already joined this event')
+    events.value = events.value.map(e => {
+      if (e.id === eventId && !e.participants?.includes(currentUser.value.id)) {
+        return {
+          ...e,
+          participants: [...(e.participants || []), currentUser.value.id],
+          participantCount: (e.participantCount || 0) + 1
         }
       }
-      return event
+      return e
     })
 
     saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
-    console.log('Joined event successfully')
+
+    // Send email to organizer
+    if (event.creatorEmail) {
+      const { initEmailJS, sendActivityBookingNotification } = await import('@/utils/emailService')
+      initEmailJS()
+      await sendActivityBookingNotification({
+        organizerEmail: event.creatorEmail,
+        organizerName: event.creatorName,
+        activityName: event.name,
+        participantName: currentUser.value.displayName || currentUser.value.email,
+        participantEmail: currentUser.value.email,
+        activityDate: event.date,
+        activityTime: event.time,
+        activityLocation: event.location
+      })
+    }
   } catch (error) {
     console.error('Error joining event:', error)
-    alert('Failed to join event. Please try again.')
+    alert('Failed to join event')
   }
 }
 
 const leaveEvent = async (eventId) => {
-  // Use the global currentUser instead of loading from storage
   if (!currentUser.value) return
 
-  console.log('Leaving event with user ID:', currentUser.value.id)
-
   try {
-    // Leave activity in Firestore
     const { leaveActivity } = await import('@/firebase/database')
     await leaveActivity(eventId, currentUser.value.id)
 
-    // Update local state
-    events.value = events.value.map(event => {
-      if (event.id === eventId && event.participants) {
-        console.log('Removing user from participants:', currentUser.value.id)
+    events.value = events.value.map(e => {
+      if (e.id === eventId && e.participants?.includes(currentUser.value.id)) {
         return {
-          ...event,
-          participants: event.participants.filter(id => id !== currentUser.value.id),
-          participantCount: Math.max(0, event.participants.length - 1)
+          ...e,
+          participants: e.participants.filter(id => id !== currentUser.value.id),
+          participantCount: Math.max(0, (e.participantCount || 1) - 1)
         }
       }
-      return event
+      return e
     })
 
     saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
-    console.log('Left event successfully')
   } catch (error) {
     console.error('Error leaving event:', error)
-    alert('Failed to leave event. Please try again.')
+    alert('Failed to leave event')
   }
 }
 
@@ -213,16 +196,13 @@ onMounted(() => {
         email: firebaseUser.email,
         displayName: firebaseUser.displayName || firebaseUser.email
       }
-      console.log('App.vue - Firebase user detected:', firebaseUser.email, 'ID:', firebaseUser.uid)
     } else {
       // Check local storage as fallback
       const localUser = loadFromLocalStorage(STORAGE_KEYS.CURRENT_USER, null)
       if (localUser) {
         currentUser.value = localUser
-        console.log('App.vue - Local storage user detected:', localUser)
       } else {
         currentUser.value = null
-        console.log('App.vue - No user logged in')
       }
     }
   })
@@ -232,7 +212,6 @@ onMounted(() => {
     try {
       const { migrateActivitiesToIncludeRatings } = await import('@/utils/migrateActivities')
       const result = await migrateActivitiesToIncludeRatings()
-      console.log('Migration result:', result)
 
       // Reload data after migration
       if (result.updatedCount > 0) {
@@ -337,5 +316,16 @@ body, html {
 
 html {
   scroll-behavior: smooth;
+}
+
+/* Accessibility: Enhanced focus styles for keyboard navigation */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid #0d6efd;
+  outline-offset: 2px;
 }
 </style>

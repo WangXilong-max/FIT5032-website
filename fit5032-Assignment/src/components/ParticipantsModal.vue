@@ -25,18 +25,10 @@
 
           <!-- Participants List -->
           <div v-else>
-            <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="mb-3">
               <p class="mb-0">
                 <strong>{{ participants.length }}</strong> participant{{ participants.length > 1 ? 's' : '' }} registered
               </p>
-              <div class="btn-group" role="group">
-                <button class="btn btn-sm btn-outline-success" @click="exportCSV" title="Export as CSV">
-                  <i class="bi bi-file-earmark-spreadsheet me-1"></i>CSV
-                </button>
-                <button class="btn btn-sm btn-outline-danger" @click="exportPDF" title="Export as PDF">
-                  <i class="bi bi-file-earmark-pdf me-1"></i>PDF
-                </button>
-              </div>
             </div>
 
             <div class="table-responsive">
@@ -77,8 +69,6 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { getActivityParticipants } from '@/firebase/database'
-import { jsPDF } from 'jspdf'
-import autoTable from 'jspdf-autotable'
 
 const props = defineProps({
   activityId: {
@@ -115,107 +105,6 @@ const loadParticipants = async () => {
   }
 }
 
-// Export to CSV
-const exportCSV = () => {
-  if (participants.value.length === 0) {
-    alert('No participants to export')
-    return
-  }
-
-  // Create CSV content
-  const headers = ['No', 'Name', 'Email', 'User ID']
-  const rows = participants.value.map((p, index) => [
-    index + 1,
-    p.displayName,
-    p.email,
-    p.userId
-  ])
-
-  let csvContent = headers.join(',') + '\n'
-  rows.forEach(row => {
-    csvContent += row.map(cell => `"${cell}"`).join(',') + '\n'
-  })
-
-  // Download CSV file
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `${sanitizeFilename(props.activityName)}_participants.csv`
-  link.click()
-  URL.revokeObjectURL(url)
-}
-
-// Export to PDF
-const exportPDF = () => {
-  console.log('exportPDF called')
-  console.log('participants:', participants.value)
-
-  if (participants.value.length === 0) {
-    alert('No participants to export')
-    return
-  }
-
-  try {
-    console.log('Creating PDF...')
-    const doc = new jsPDF()
-
-    // Title
-    doc.setFontSize(18)
-    doc.text('Participants List', 14, 20)
-
-    // Activity name
-    doc.setFontSize(12)
-    doc.text('Activity: ' + props.activityName, 14, 30)
-
-    // Date
-    doc.setFontSize(10)
-    doc.text('Generated: ' + new Date().toLocaleString(), 14, 38)
-
-    // Participants count
-    doc.text('Total Participants: ' + participants.value.length, 14, 45)
-
-    // Table
-    const tableData = participants.value.map((p, index) => [
-      index + 1,
-      p.displayName || 'N/A',
-      p.email || 'N/A',
-      (p.userId || '').substring(0, 12) + '...'
-    ])
-
-    console.log('Table data:', tableData)
-
-    // Use autoTable - call it directly from imported module
-    autoTable(doc, {
-      startY: 52,
-      head: [['No', 'Name', 'Email', 'User ID']],
-      body: tableData,
-      theme: 'grid',
-      headStyles: {
-        fillColor: [0, 0, 0],
-        textColor: [255, 255, 255]
-      },
-      styles: {
-        fontSize: 9
-      }
-    })
-
-    // Save PDF
-    const filename = sanitizeFilename(props.activityName) + '_participants.pdf'
-    console.log('Saving PDF as:', filename)
-    doc.save(filename)
-    console.log('PDF saved successfully')
-  } catch (error) {
-    console.error('Error generating PDF:', error)
-    alert('Failed to generate PDF: ' + error.message)
-  }
-}
-
-// Sanitize filename
-const sanitizeFilename = (name) => {
-  return name.replace(/[^a-z0-9]/gi, '_').toLowerCase()
-}
-
 // Expose method to parent component
 defineExpose({
   loadParticipants
@@ -243,21 +132,5 @@ defineExpose({
 
 .font-monospace {
   font-family: 'Courier New', monospace;
-}
-
-.btn-group .btn {
-  border-color: #dee2e6;
-}
-
-.btn-outline-success:hover {
-  background-color: #28a745;
-  border-color: #28a745;
-  color: white;
-}
-
-.btn-outline-danger:hover {
-  background-color: #dc3545;
-  border-color: #dc3545;
-  color: white;
 }
 </style>

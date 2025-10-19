@@ -40,7 +40,6 @@ export const sendActivityBookingNotification = async ({
   activityLocation
 }) => {
   try {
-    // Prepare template parameters
     const templateParams = {
       to_email: organizerEmail,
       to_name: organizerName,
@@ -53,14 +52,12 @@ export const sendActivityBookingNotification = async ({
       message: `${participantName} (${participantEmail}) has booked your activity "${activityName}" scheduled for ${activityDate} at ${activityTime}.`
     }
 
-    // Send email using EmailJS
     const response = await emailjs.send(
       EMAILJS_CONFIG.SERVICE_ID,
       EMAILJS_CONFIG.TEMPLATE_ID,
       templateParams
     )
 
-    console.log('Email sent successfully:', response)
     return {
       success: true,
       response
@@ -100,7 +97,6 @@ export const sendEmail = async ({ toEmail, toName, subject, message, attachmentU
       templateParams
     )
 
-    console.log('Email sent successfully:', response)
     return {
       success: true,
       response

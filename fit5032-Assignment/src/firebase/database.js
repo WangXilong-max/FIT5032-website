@@ -35,7 +35,6 @@ export const getAllActivities = async () => {
       })
     })
 
-    console.log('Fetched activities from Firestore:', activities.length)
     return activities
   } catch (error) {
     console.error('Error fetching activities:', error)
@@ -59,7 +58,6 @@ export const getActivityById = async (activityId) => {
         ...activitySnap.data()
       }
     } else {
-      console.log('No such activity!')
       return null
     }
   } catch (error) {
@@ -88,7 +86,6 @@ export const createActivity = async (activityData) => {
       updatedAt: serverTimestamp()
     })
 
-    console.log('Activity created with ID:', docRef.id)
     return {
       id: docRef.id,
       ...activityData,
@@ -115,7 +112,6 @@ export const updateActivity = async (activityId, updates) => {
       updatedAt: serverTimestamp()
     })
 
-    console.log('Activity updated:', activityId)
     return true
   } catch (error) {
     console.error('Error updating activity:', error)
@@ -133,7 +129,6 @@ export const deleteActivity = async (activityId) => {
     const activityRef = doc(db, 'activities', activityId)
     await deleteDoc(activityRef)
 
-    console.log('Activity deleted:', activityId)
     return true
   } catch (error) {
     console.error('Error deleting activity:', error)
@@ -184,7 +179,6 @@ export const joinActivity = async (activityId, userId) => {
       updatedAt: serverTimestamp()
     })
 
-    console.log('User joined activity:', { activityId, userId })
     return true
   } catch (error) {
     console.error('Error joining activity:', error)
@@ -207,7 +201,6 @@ export const leaveActivity = async (activityId, userId) => {
       updatedAt: serverTimestamp()
     })
 
-    console.log('User left activity:', { activityId, userId })
     return true
   } catch (error) {
     console.error('Error leaving activity:', error)
@@ -285,7 +278,6 @@ export const getActivityParticipants = async (activityId) => {
       }
     }
 
-    console.log('Fetched participants for activity:', activityId, participants.length)
     return participants
   } catch (error) {
     console.error('Error fetching activity participants:', error)
@@ -304,8 +296,6 @@ export const getActivityParticipants = async (activityId) => {
  */
 export const addRating = async (activityId, rating, userId) => {
   try {
-    console.log('addRating called with:', { activityId, rating, userId, ratingType: typeof rating })
-
     const activityRef = doc(db, 'activities', activityId)
     const activitySnap = await getDoc(activityRef)
 
@@ -315,23 +305,19 @@ export const addRating = async (activityId, rating, userId) => {
     }
 
     const activityData = activitySnap.data()
-    console.log('Current activity data:', activityData)
 
     let ratings = activityData.ratings || []
-    console.log('Current ratings array:', ratings)
 
     // Check if user has already rated this activity
     const existingRatingIndex = ratings.findIndex(r => r.userId === userId)
 
     if (existingRatingIndex !== -1) {
       // Update existing rating
-      console.log('User has already rated, updating existing rating')
       ratings[existingRatingIndex] = {
         rating: parseInt(rating),
         userId,
         timestamp: Date.now()
       }
-      console.log('Updated rating:', ratings[existingRatingIndex])
     } else {
       // Add new rating
       const newRating = {
@@ -340,12 +326,10 @@ export const addRating = async (activityId, rating, userId) => {
         timestamp: Date.now()
       }
       ratings.push(newRating)
-      console.log('New rating to add:', newRating)
     }
 
     // Calculate new average
     const averageRating = ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
-    console.log('Calculated average:', averageRating)
 
     await updateDoc(activityRef, {
       ratings,
@@ -353,7 +337,6 @@ export const addRating = async (activityId, rating, userId) => {
       updatedAt: serverTimestamp()
     })
 
-    console.log('✅ Rating successfully saved to Firestore:', { activityId, rating, averageRating, totalRatings: ratings.length })
     return true
   } catch (error) {
     console.error('❌ Error adding rating:', error)
@@ -383,7 +366,6 @@ export const saveUserProfile = async (userId, userData) => {
       })
     })
 
-    console.log('User profile saved:', userId)
     return true
   } catch (error) {
     console.error('Error saving user profile:', error)

@@ -339,81 +339,49 @@ const isFormValid = computed(() => {
          form.eventDate &&
          form.eventTime &&
          form.location &&
+         form.latitude &&
+         form.longitude &&
          form.maxParticipants &&
          !Object.values(errors).some(error => error)
 })
 
 // Validation functions
+const validationRules = {
+  eventName: (value) => !value.trim() ? 'Event name is required' : value.length < 3 ? 'Event name must be at least 3 characters' : '',
+  category: (value) => !value ? 'Please select a sport category' : '',
+  eventDate: (value) => !value ? 'Event date is required' : new Date(value) < new Date() ? 'Event date cannot be in the past' : '',
+  eventTime: (value) => !value ? 'Event time is required' : '',
+  location: (value) => !value.trim() ? 'Event location is required' : (!form.latitude || !form.longitude) ? 'Please select location from map or use current location' : '',
+  maxParticipants: (value) => !value ? 'Maximum participants is required' : (value < 1 || value > 1000) ? 'Participants must be between 1 and 1000' : ''
+}
+
 const validateField = (field) => {
-  errors[field] = ''
-
-  switch (field) {
-    case 'eventName':
-      if (!form.eventName.trim()) {
-        errors.eventName = 'Event name is required'
-      } else if (form.eventName.length < 3) {
-        errors.eventName = 'Event name must be at least 3 characters'
-      }
-      break
-
-    case 'category':
-      if (!form.category) {
-        errors.category = 'Please select a sport category'
-      }
-      break
-
-    case 'eventDate':
-      if (!form.eventDate) {
-        errors.eventDate = 'Event date is required'
-      } else if (new Date(form.eventDate) < new Date()) {
-        errors.eventDate = 'Event date cannot be in the past'
-      }
-      break
-
-    case 'eventTime':
-      if (!form.eventTime) {
-        errors.eventTime = 'Event time is required'
-      }
-      break
-
-    case 'location':
-      if (!form.location.trim()) {
-        errors.location = 'Event location is required'
-      }
-      break
-
-    case 'maxParticipants':
-      if (!form.maxParticipants) {
-        errors.maxParticipants = 'Maximum participants is required'
-      } else if (form.maxParticipants < 1 || form.maxParticipants > 1000) {
-        errors.maxParticipants = 'Participants must be between 1 and 1000'
-      }
-      break
-  }
+  errors[field] = validationRules[field]?.(form[field]) || ''
 }
 
 // Location and Map functions
+const setCoordinates = (lng, lat) => {
+  form.latitude = lat
+  form.longitude = lng
+  updateMapLocation([lng, lat])
+  reverseGeocode(lng, lat)
+}
+
 const initializeMapbox = () => {
   const mapElement = document.getElementById('map')
   if (mapElement) {
-    // Initialize Mapbox map centered on Melbourne
     map.value = new mapboxgl.Map({
       container: 'map',
       style: 'mapbox://styles/mapbox/streets-v12',
-      center: [144.9631, -37.8136], // Melbourne coordinates [lng, lat]
+      center: [144.9631, -37.8136],
       zoom: 13
     })
 
-    // Add navigation controls
     map.value.addControl(new mapboxgl.NavigationControl(), 'top-right')
 
-    // Add click event to set location
     map.value.on('click', (e) => {
       const { lng, lat } = e.lngLat
-      form.latitude = lat
-      form.longitude = lng
-      updateMapLocation([lng, lat])
-      reverseGeocode(lng, lat)
+      setCoordinates(lng, lat)
     })
   }
 }
@@ -464,9 +432,7 @@ const selectLocation = (suggestion) => {
   locationSuggestions.value = []
 
   const [lng, lat] = suggestion.coordinates
-  form.latitude = lat
-  form.longitude = lng
-  updateMapLocation([lng, lat])
+  setCoordinates(lng, lat)
 }
 
 const getCurrentLocation = () => {
@@ -477,11 +443,7 @@ const getCurrentLocation = () => {
       (position) => {
         const lat = position.coords.latitude
         const lng = position.coords.longitude
-        form.latitude = lat
-        form.longitude = lng
-
-        updateMapLocation([lng, lat])
-        reverseGeocode(lng, lat)
+        setCoordinates(lng, lat)
         gettingLocation.value = false
       },
       (error) => {
@@ -522,9 +484,7 @@ const updateMapLocation = (coordinates) => {
     // Handle marker drag
     marker.value.on('dragend', () => {
       const lngLat = marker.value.getLngLat()
-      form.latitude = lngLat.lat
-      form.longitude = lngLat.lng
-      reverseGeocode(lngLat.lng, lngLat.lat)
+      setCoordinates(lngLat.lng, lngLat.lat)
     })
   }
 }
@@ -559,26 +519,19 @@ const handleSubmit = async () => {
   latitude: form.latitude,
   longitude: form.longitude,
   status: 'upcoming',
-  creatorId: currentUser.value?.uid,  // Store creator ID (Firebase UID)
-  creatorName: currentUser.value?.email || 'Anonymous', // Store creator name (email)
-  creatorEmail: currentUser.value?.email || '' // Store creator email explicitly
+  creatorId: currentUser.value.id,
+  creatorName: currentUser.value.email || 'Anonymous',
+  creatorEmail: currentUser.value.email || ''
     }
 
     // Save to Firestore
     const { createActivity } = await import('@/firebase/database')
     const createdActivity = await createActivity(eventData)
 
-    console.log('Activity saved to Firestore:', createdActivity)
-
-    // Also save to local storage for backwards compatibility
     const existingEvents = loadFromLocalStorage(STORAGE_KEYS.EVENTS, [])
     existingEvents.unshift({ ...createdActivity, id: createdActivity.id })
     saveToLocalStorage(STORAGE_KEYS.EVENTS, existingEvents)
 
-    // Note: Parent component will reload data from Firestore automatically
-    // No need to manually emit event
-
-    // Success feedback
     alert('Activity created successfully!')
     isSubmitting.value = false
     router.push('/activities')
@@ -601,19 +554,14 @@ onMounted(() => {
   // Set up Firebase auth state listener
   const unsubscribe = onAuthStateChange((firebaseUser) => {
     if (firebaseUser) {
-      // User is signed in with Firebase
       currentUser.value = {
         id: firebaseUser.uid,
         email: firebaseUser.email,
         displayName: firebaseUser.displayName || firebaseUser.email
       }
-      console.log('Firebase user detected:', currentUser.value)
     } else if (localUser) {
-      // Fall back to local storage user
       currentUser.value = localUser
-      console.log('Local storage user detected:', currentUser.value)
     } else {
-      // No user found
       currentUser.value = null
     }
     isCheckingAuth.value = false

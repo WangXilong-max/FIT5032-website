@@ -1,186 +1,126 @@
 <template>
-  <section class="py-5 bg-gradient-light">
-    <div class="container py-5">
+  <section class="py-4">
+    <div class="container">
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading activity details...</span>
-        </div>
-        <p class="mt-3">Loading activity information...</p>
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-3">Loading...</p>
       </div>
 
       <!-- Error State -->
       <div v-else-if="error" class="alert alert-danger">
-        <h4><i class="bi bi-exclamation-triangle me-2"></i>Error</h4>
+        <h4>Error</h4>
         <p>{{ error }}</p>
-        <router-link to="/activities" class="btn btn-primary">Back to Activities</router-link>
+        <router-link to="/activities" class="btn btn-primary">Back</router-link>
       </div>
 
       <!-- Activity Details -->
       <div v-else-if="activity">
         <!-- Header -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <h1 class="display-5 fw-bold text-white mb-2">{{ activity.name }}</h1>
-                <div class="d-flex gap-2 mb-3">
-                  <span class="badge bg-primary">{{ activity.category }}</span>
-                  <span class="badge bg-success" v-if="activity.price === 0">Free</span>
-                  <span class="badge bg-warning text-dark" v-else>${{ activity.price }}</span>
-                </div>
-              </div>
-              <router-link to="/activities" class="btn btn-light">
-                <i class="bi bi-arrow-left me-2"></i>Back
-              </router-link>
+        <div class="d-flex justify-content-between align-items-start mb-4">
+          <div>
+            <h1 class="h2 fw-bold mb-2">{{ activity.name }}</h1>
+            <div class="d-flex gap-2">
+              <span class="badge bg-primary">{{ activity.category }}</span>
+              <span class="badge" :class="activity.price === 0 ? 'bg-success' : 'bg-warning text-dark'">
+                {{ activity.price === 0 ? 'Free' : `$${activity.price}` }}
+              </span>
             </div>
           </div>
+          <router-link to="/activities" class="btn btn-sm btn-outline-primary">Back</router-link>
         </div>
 
-        <div class="row g-4">
-          <!-- Left Column - Activity Information -->
+        <div class="row g-3">
+          <!-- Left Column -->
           <div class="col-lg-6">
-            <div class="card shadow-lg h-100">
-              <div class="card-body">
-                <h3 class="card-title mb-4">
-                  <i class="bi bi-info-circle me-2"></i>Activity Details
-                </h3>
+            <div class="border rounded p-3">
+              <p class="text-muted mb-2">{{ activity.description || 'No description' }}</p>
 
-                <!-- Description -->
-                <div class="mb-4">
-                  <h5 class="text-muted mb-2">Description</h5>
-                  <p class="lead">{{ activity.description || 'No description provided' }}</p>
+              <div class="row g-2 text-sm mb-3">
+                <div class="col-6">
+                  <small class="text-muted d-block">Date</small>
+                  <strong>{{ activity.date }}</strong>
                 </div>
+                <div class="col-6">
+                  <small class="text-muted d-block">Time</small>
+                  <strong>{{ activity.time }}</strong>
+                </div>
+              </div>
 
-                <!-- Date & Time -->
-                <div class="row mb-4">
-                  <div class="col-6">
-                    <div class="d-flex align-items-center">
-                      <i class="bi bi-calendar3 text-primary fs-4 me-3"></i>
-                      <div>
-                        <small class="text-muted d-block">Date</small>
-                        <strong>{{ activity.date }}</strong>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-6">
-                    <div class="d-flex align-items-center">
-                      <i class="bi bi-clock text-primary fs-4 me-3"></i>
-                      <div>
-                        <small class="text-muted d-block">Time</small>
-                        <strong>{{ activity.time }}</strong>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div class="mb-3">
+                <small class="text-muted d-block">Location</small>
+                <strong>{{ activity.location }}</strong>
+              </div>
 
-                <!-- Location -->
-                <div class="mb-4">
-                  <div class="d-flex align-items-start">
-                    <i class="bi bi-geo-alt text-primary fs-4 me-3"></i>
-                    <div>
-                      <small class="text-muted d-block">Location</small>
-                      <strong>{{ activity.location }}</strong>
-                    </div>
-                  </div>
+              <div class="mb-3">
+                <small class="text-muted d-block">Participants</small>
+                <strong>{{ activity.participantCount || 0 }} / {{ activity.maxParticipants }}</strong>
+                <div class="progress mt-1" style="height: 6px;">
+                  <div
+                    class="progress-bar"
+                    :class="getProgressBarClass()"
+                    :style="{ width: getParticipantPercentage() + '%' }"
+                  ></div>
                 </div>
+              </div>
 
-                <!-- Participants -->
-                <div class="mb-4">
-                  <div class="d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center">
-                      <i class="bi bi-people text-primary fs-4 me-3"></i>
-                      <div>
-                        <small class="text-muted d-block">Participants</small>
-                        <strong>{{ activity.participantCount || 0 }} / {{ activity.maxParticipants }}</strong>
-                      </div>
-                    </div>
-                    <div class="progress" style="width: 150px; height: 8px;">
-                      <div
-                        class="progress-bar"
-                        :class="getProgressBarClass()"
-                        :style="{ width: getParticipantPercentage() + '%' }"
-                      ></div>
-                    </div>
-                  </div>
-                  <!-- Show participant emails if user is joined or is creator -->
-                  <div v-if="isUserJoined || (currentUser && currentUser.uid === activity.creatorId)" class="mt-2">
-                    <div class="card card-body bg-light p-2">
-                      <div class="fw-bold mb-1">Participant Emails:</div>
-                      <ul class="mb-0 ps-3">
-                        <li v-for="p in participants" :key="p.userId">
-                          <span>{{ p.email }}</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
+              <div v-if="isUserJoined || (currentUser && currentUser.id === activity.creatorId)" class="bg-light p-2 rounded mb-3">
+                <small class="fw-bold d-block mb-1">Participants:</small>
+                <div style="font-size: 0.85rem;">
+                  <div v-for="p in participants" :key="p.userId">{{ p.email }}</div>
                 </div>
+              </div>
 
-                <!-- Organizer Info -->
-                <div class="alert alert-info">
-                  <h6 class="mb-2"><i class="bi bi-person-badge me-2"></i>Organizer</h6>
-                  <p class="mb-1"><strong>{{ activity.creatorName || 'Unknown' }}</strong></p>
-                  <p class="mb-0 small text-muted">{{ activity.creatorEmail || 'No email provided' }}</p>
-                </div>
+              <div class="bg-light p-2 rounded mb-3">
+                <small class="fw-bold d-block mb-1">Organizer</small>
+                <small>{{ activity.creatorName || 'Unknown' }}</small><br>
+                <small class="text-muted">{{ activity.creatorEmail }}</small>
+              </div>
 
-                <!-- Action Button -->
-                <div class="d-grid" v-if="currentUser && currentUser.uid !== activity.creatorId">
-                  <button
-                    v-if="isUserJoined"
-                    class="btn btn-danger btn-lg"
-                    @click="handleLeaveActivity"
-                    :disabled="actionLoading"
-                  >
-                    <i class="bi bi-box-arrow-right me-2"></i>
-                    {{ actionLoading ? 'Leaving...' : 'Leave Activity' }}
-                  </button>
-                  <button
-                    v-else
-                    class="btn btn-primary btn-lg"
-                    @click="handleJoinActivity"
-                    :disabled="actionLoading || isFull"
-                  >
-                    <i class="bi bi-plus-circle me-2"></i>
-                    {{ actionLoading ? 'Joining...' : isFull ? 'Activity Full' : 'Join Activity' }}
-                  </button>
-                </div>
+              <div v-if="currentUser && currentUser.id !== activity.creatorId" class="d-grid">
+                <button
+                  v-if="isUserJoined"
+                  class="btn btn-outline-danger btn-sm"
+                  @click="handleLeaveActivity"
+                  :disabled="actionLoading"
+                  aria-label="Leave this activity"
+                >
+                  {{ actionLoading ? 'Leaving...' : 'Leave' }}
+                </button>
+                <button
+                  v-else
+                  class="btn btn-primary btn-sm"
+                  @click="handleJoinActivity"
+                  :disabled="actionLoading || isFull"
+                  aria-label="Join this activity"
+                >
+                  {{ actionLoading ? 'Joining...' : isFull ? 'Full' : 'Join' }}
+                </button>
               </div>
             </div>
           </div>
 
           <!-- Right Column - Map -->
           <div class="col-lg-6">
-            <div class="card shadow-lg h-100">
-              <div class="card-body p-0">
-                <!-- Map Container -->
-                <div id="map" style="height: 600px; width: 100%; position: relative;">
-                  <!-- No Location Message -->
-                  <div
-                    v-if="!activity.coordinates && !activity.latitude"
-                    class="d-flex align-items-center justify-content-center h-100 bg-light"
-                  >
-                    <div class="text-center p-4">
-                      <i class="bi bi-geo-alt-fill text-muted" style="font-size: 3rem;"></i>
-                      <p class="text-muted mt-3 mb-0">No location data available for this activity</p>
-                      <small class="text-muted">The activity organizer didn't set a location</small>
-                    </div>
+            <div class="border rounded overflow-hidden">
+              <div id="map" style="height: 400px; width: 100%;">
+                <div
+                  v-if="!activity.coordinates && !activity.latitude && !activity.longitude"
+                  class="d-flex align-items-center justify-content-center h-100 bg-light"
+                >
+                  <div class="text-center text-muted">
+                    <small>No location data</small>
                   </div>
                 </div>
-
-                <!-- Map Controls -->
-                <div class="p-3" v-if="activity.coordinates || activity.latitude">
-                  <button
-                    class="btn btn-primary w-100"
-                    @click="showDirections"
-                    :disabled="!userLocation"
-                  >
-                    <i class="bi bi-signpost-2 me-2"></i>
-                    {{ userLocation ? 'Show Directions' : 'Getting your location...' }}
-                  </button>
-                  <small class="text-muted d-block mt-2 text-center">
-                    Click on the activity marker to see the route from your location
-                  </small>
-                </div>
+              </div>
+              <div v-if="activity.coordinates || activity.latitude" class="p-2">
+                <button
+                  class="btn btn-primary btn-sm w-100"
+                  @click="showDirections"
+                  :disabled="!userLocation"
+                >
+                  {{ userLocation ? 'Directions' : 'Getting location...' }}
+                </button>
               </div>
             </div>
           </div>
@@ -226,7 +166,7 @@ export default {
 
     const isUserJoined = computed(() => {
       if (!currentUser.value || !activity.value) return false
-      return activity.value.participants?.includes(currentUser.value.uid) || false
+      return activity.value.participants?.includes(currentUser.value.id) || false
     })
 
     const isFull = computed(() => {
@@ -259,7 +199,6 @@ export default {
         }
 
         activity.value = data
-        console.log('Activity loaded:', data)
 
         // Fetch participant details
         try {
@@ -271,13 +210,10 @@ export default {
 
         // Check for coordinates in different formats
         if (data.coordinates) {
-          console.log('Found coordinates array:', data.coordinates)
         } else if (data.longitude && data.latitude) {
           // Convert longitude/latitude to coordinates array [lng, lat]
           data.coordinates = [data.longitude, data.latitude]
-          console.log('Converted lat/lng to coordinates:', data.coordinates)
         } else {
-          console.warn('No coordinates found for this activity')
         }
 
         // Initialize map after activity is loaded and DOM is ready
@@ -288,7 +224,6 @@ export default {
             initMap()
           }, 100)
         } else {
-          console.warn('Activity has no coordinates, map will not be initialized')
         }
       } catch (err) {
         console.error('Error loading activity:', err)
@@ -319,45 +254,27 @@ export default {
 
     const initMap = () => {
       if (!activity.value?.coordinates) {
-        console.warn('Cannot initialize map: no coordinates')
-        console.log('Activity data:', activity.value)
-
-        // Use default Melbourne coordinates as fallback
         if (activity.value) {
           activity.value.coordinates = [144.9631, -37.8136]
-          console.log('Using default Melbourne coordinates as fallback')
         } else {
           return
         }
       }
 
       try {
-        console.log('Initializing map with coordinates:', activity.value.coordinates)
-        console.log('Coordinate type:', typeof activity.value.coordinates)
-        console.log('Is array:', Array.isArray(activity.value.coordinates))
-        console.log('Coordinate values:', activity.value.coordinates[0], activity.value.coordinates[1])
-
         mapboxgl.accessToken = MAPBOX_TOKEN
 
-        // Check if map container exists
         const mapContainer = document.getElementById('map')
         if (!mapContainer) {
-          console.error('Map container not found in DOM')
           return
         }
 
-        console.log('Map container found, width:', mapContainer.offsetWidth, 'height:', mapContainer.offsetHeight)
-
-        // Ensure coordinates are numbers
         const lng = parseFloat(activity.value.coordinates[0])
         const lat = parseFloat(activity.value.coordinates[1])
 
         if (isNaN(lng) || isNaN(lat)) {
-          console.error('Invalid coordinates:', { lng, lat })
           return
         }
-
-        console.log('Parsed coordinates:', { lng, lat })
 
         map.value = new mapboxgl.Map({
           container: 'map',
@@ -366,16 +283,9 @@ export default {
           zoom: 13
         })
 
-        console.log('Map instance created')
-
-        // Add navigation controls
         map.value.addControl(new mapboxgl.NavigationControl())
 
-        // Wait for map to load before adding markers
         map.value.on('load', () => {
-          console.log('Map loaded successfully')
-
-          // Add activity marker
           const el = document.createElement('div')
           el.className = 'custom-marker'
           el.style.backgroundColor = '#dc3545'
@@ -397,14 +307,10 @@ export default {
             )
             .addTo(map.value)
 
-          console.log('Activity marker added at:', lng, lat)
-
-          // Add click event to show directions
           el.addEventListener('click', () => {
             showDirections()
           })
 
-          // Get user location
           getUserLocation()
         })
 
@@ -413,7 +319,6 @@ export default {
         })
       } catch (err) {
         console.error('Error initializing map:', err)
-        console.error('Error stack:', err.stack)
       }
     }
 
@@ -512,10 +417,9 @@ export default {
 
       try {
         actionLoading.value = true
-        const success = await joinActivity(activityId.value, currentUser.value.uid)
+        const success = await joinActivity(activityId.value, currentUser.value.id)
 
         if (success) {
-          // Send email notification to organizer
           await sendActivityBookingNotification({
             organizerEmail: activity.value.creatorEmail,
             organizerName: activity.value.creatorEmail,
@@ -528,7 +432,7 @@ export default {
           })
 
           alert('Successfully joined the activity! The organizer has been notified.')
-          await loadActivity() // Reload activity data
+          await loadActivity()
         } else {
           alert('Failed to join activity. Please try again.')
         }
@@ -547,11 +451,11 @@ export default {
 
       try {
         actionLoading.value = true
-        const success = await leaveActivity(activityId.value, currentUser.value.uid)
+        const success = await leaveActivity(activityId.value, currentUser.value.id)
 
         if (success) {
           alert('Successfully left the activity')
-          await loadActivity() // Reload activity data
+          await loadActivity()
         } else {
           alert('Failed to leave activity. Please try again.')
         }

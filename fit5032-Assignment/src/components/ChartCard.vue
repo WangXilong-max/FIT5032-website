@@ -1,10 +1,18 @@
 <template>
   <div class="col-12">
     <div class="card shadow-sm">
-      <div class="card-header bg-dark text-white">
+      <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
         <h6 class="mb-0">
           <i :class="`bi ${icon} me-2`"></i>{{ title }}
         </h6>
+        <div class="btn-group btn-group-sm">
+          <button @click="exportCSV" class="btn btn-outline-light" aria-label="Export as CSV">
+            <i class="bi bi-file-earmark-spreadsheet me-1"></i>CSV
+          </button>
+          <button @click="exportPDF" class="btn btn-outline-light" aria-label="Export as PDF">
+            <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+          </button>
+        </div>
       </div>
       <div class="card-body">
         <div class="row">
@@ -35,6 +43,8 @@
 <script>
 import InteractiveTable from '@/components/InteractiveTable.vue'
 import DataChart from '@/components/DataChart.vue'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 export default {
   name: 'ChartCard',
@@ -78,6 +88,49 @@ export default {
     tableColumns: {
       type: Array,
       required: true
+    }
+  },
+  methods: {
+    exportCSV() {
+      const headers = this.tableColumns.map(col => col.label)
+      const rows = this.tableData.map(item =>
+        this.tableColumns.map(col => item[col.key] || '')
+      )
+      
+      const csv = [headers, ...rows]
+        .map(row => row.map(cell => `"${cell}"`).join(','))
+        .join('\n')
+      
+      const blob = new Blob([csv], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${this.title}.csv`
+      link.click()
+      URL.revokeObjectURL(url)
+    },
+    
+    exportPDF() {
+      const doc = new jsPDF()
+      
+      doc.setFontSize(14)
+      doc.text(this.title, 14, 15)
+      
+      const headers = this.tableColumns.map(col => col.label)
+      const rows = this.tableData.map(item =>
+        this.tableColumns.map(col => item[col.key] || '')
+      )
+      
+      autoTable(doc, {
+        head: [headers],
+        body: rows,
+        startY: 25,
+        theme: 'grid',
+        headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255] },
+        styles: { fontSize: 9 }
+      })
+      
+      doc.save(`${this.title}.pdf`)
     }
   }
 }
