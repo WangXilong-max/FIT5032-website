@@ -18,6 +18,12 @@
           <li class="nav-item">
             <router-link to="/activities" class="nav-link" active-class="active">Book Activities</router-link>
           </li>
+          <li class="nav-item">
+            <router-link to="/signin" class="nav-link" active-class="active">Login</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link to="/register" class="nav-link btn btn-outline-light ms-2" active-class="active">Register</router-link>
+          </li>
         </ul>
       </div>
     </div>
@@ -32,13 +38,13 @@ defineProps({
 
 <style scoped>
 .navbar {
-  background: rgba(0, 0, 0, 0.1) !important;
+  background: rgba(0, 0, 0, 1) !important;
   backdrop-filter: blur(10px);
 }
 
 .navbar-scrolled {
-  background: rgba(0, 0, 0, 0.9) !important;
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 1) !important;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
 }
 
 .brand-text {
@@ -54,6 +60,22 @@ defineProps({
 }
 
 .navbar-brand {
+  text-decoration: none;
+}
+
+/* Register button styles */
+.btn-outline-light {
+  border: 1px solid #fff;
+  color: #fff;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.25rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-light:hover {
+  background-color: #fff;
+  color: #000;
   text-decoration: none;
 }
 </style>

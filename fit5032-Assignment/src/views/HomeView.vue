@@ -18,9 +18,6 @@
         </div>
       </div>
     </div>
-    <div class="scroll-indicator position-absolute bottom-0 start-50 translate-middle-x mb-4">
-      <div class="scroll-arrow"></div>
-    </div>
   </section>
 </template>
 
@@ -59,18 +56,5 @@ defineEmits(['create-event'])
 .btn-outline-light:hover {
   background: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 255, 255, 0.5);
-}
-
-.scroll-indicator {
-  opacity: 0.7;
-}
-
-.scroll-arrow {
-  width: 30px;
-  height: 30px;
-  border: 2px solid white;
-  border-top: none;
-  border-left: none;
-  transform: rotate(45deg);
 }
 </style>
