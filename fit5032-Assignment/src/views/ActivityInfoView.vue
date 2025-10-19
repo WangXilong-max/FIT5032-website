@@ -135,7 +135,6 @@ import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getActivityById, joinActivity, leaveActivity } from '@/firebase/database'
 import { onAuthStateChange } from '@/firebase/auth'
-import { sendActivityBookingNotification } from '@/utils/emailService'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { MAPBOX_ACCESS_TOKEN } from '@/config/mapbox'
@@ -420,17 +419,7 @@ export default {
         const success = await joinActivity(activityId.value, currentUser.value.id)
 
         if (success) {
-          await sendActivityBookingNotification({
-            organizerEmail: activity.value.creatorEmail,
-            organizerName: activity.value.creatorEmail,
-            activityName: activity.value.name,
-            participantName: currentUser.value.email,
-            participantEmail: currentUser.value.email,
-            activityDate: activity.value.date,
-            activityTime: activity.value.time,
-            activityLocation: activity.value.location
-          })
-
+          // Removed sendActivityBookingNotification
           alert('Successfully joined the activity! The organizer has been notified.')
           await loadActivity()
         } else {

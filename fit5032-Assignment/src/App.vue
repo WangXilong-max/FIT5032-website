@@ -125,21 +125,7 @@ const joinEvent = async (eventId) => {
 
     saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
 
-    // Send email to organizer
-    if (event.creatorEmail) {
-      const { initEmailJS, sendActivityBookingNotification } = await import('@/utils/emailService')
-      initEmailJS()
-      await sendActivityBookingNotification({
-        organizerEmail: event.creatorEmail,
-        organizerName: event.creatorName,
-        activityName: event.name,
-        participantName: currentUser.value.displayName || currentUser.value.email,
-        participantEmail: currentUser.value.email,
-        activityDate: event.date,
-        activityTime: event.time,
-        activityLocation: event.location
-      })
-    }
+    // Email notification is handled by Cloud Functions
   } catch (error) {
     console.error('Error joining event:', error)
     alert('Failed to join event')
