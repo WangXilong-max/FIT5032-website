@@ -11,9 +11,9 @@
             <router-link to="/activities" class="btn btn-primary btn-lg px-5 py-3 rounded-pill">
               <i class="bi bi-calendar-event me-2"></i>Book Now
             </router-link>
-            <button type="button" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill" @click="$emit('create-event')">
+            <router-link to="/create-activity" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill">
               <i class="bi bi-plus-circle me-2"></i>Create Event
-            </button>
+            </router-link>
           </div>
         </div>
       </div>
@@ -22,7 +22,7 @@
 </template>
 
 <script setup>
-defineEmits(['create-event'])
+// No emits needed anymore
 </script>
 
 <style scoped>

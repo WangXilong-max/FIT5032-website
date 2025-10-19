@@ -39,7 +39,7 @@
         </div>
         <div class="col-6">
           <small class="text-muted">
-            <i class="bi bi-person me-1"></i>{{ event.participants }}/{{ event.maxParticipants }}
+            <i class="bi bi-person me-1"></i>{{ event.participantCount || 0 }}/{{ event.maxParticipants }}
           </small>
         </div>
       </div>
@@ -71,28 +71,124 @@
       </div>
     </div>
     <div class="card-footer bg-transparent">
-      <button class="btn btn-primary btn-sm w-100">
-        <i class="bi bi-person-plus me-1"></i>Join Event
-      </button>
+      <!-- Join/Leave button - only show if user is logged in and activity is not full -->
+      <div v-if="currentUser">
+        <button
+          v-if="!isUserJoined && !isActivityFull && !isCreator"
+          class="btn btn-success btn-sm w-100"
+          @click="joinEvent"
+        >
+          <i class="bi bi-person-plus me-1"></i>Join Event
+        </button>
+        <button
+          v-else-if="isUserJoined && !isCreator"
+          class="btn btn-outline-danger btn-sm w-100"
+          @click="leaveEvent"
+        >
+          <i class="bi bi-person-dash me-1"></i>Leave Event
+        </button>
+        <button
+          v-else-if="isCreator"
+          class="btn btn-secondary btn-sm w-100"
+          disabled
+        >
+          <i class="bi bi-person-check me-1"></i>Your Event
+        </button>
+        <button
+          v-else-if="isActivityFull"
+          class="btn btn-secondary btn-sm w-100"
+          disabled
+        >
+          <i class="bi bi-people-fill me-1"></i>Event Full
+        </button>
+      </div>
+      <!-- Not logged in message -->
+      <div v-else>
+        <router-link to="/signin" class="btn btn-outline-primary btn-sm w-100">
+          <i class="bi bi-box-arrow-in-right me-1"></i>Sign In to Join
+        </router-link>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { STORAGE_KEYS, loadFromLocalStorage } from '../utils/storage.js'
+import { onAuthStateChange } from '@/firebase/auth'
 
 const props = defineProps({
   event: Object
 })
 
-const emit = defineEmits(['delete', 'rate'])
+const emit = defineEmits(['delete', 'rate', 'join', 'leave'])
 
 const currentRating = ref(0)
+const currentUser = ref(null)
 
+// Computed properties
+const isUserJoined = computed(() => {
+  return props.event.participants?.includes(currentUser.value?.id) || false
+})
+
+const isActivityFull = computed(() => {
+  return (props.event.participantCount || 0) >= props.event.maxParticipants
+})
+
+const isCreator = computed(() => {
+  return props.event.creatorId === currentUser.value?.id
+})
+
+// Methods
 const handleRate = (rating) => {
   currentRating.value = rating
   emit('rate', props.event.id, rating)
 }
+
+const joinEvent = () => {
+  if (!currentUser.value) return
+
+  // Just emit to parent, let parent handle the update
+  emit('join', props.event.id)
+}
+
+const leaveEvent = () => {
+  if (!currentUser.value) return
+
+  // Just emit to parent, let parent handle the update
+  emit('leave', props.event.id)
+}
+
+// Lifecycle
+onMounted(() => {
+  // Check both local storage and Firebase authentication
+  const localUser = loadFromLocalStorage(STORAGE_KEYS.CURRENT_USER, null)
+
+  // Set up Firebase auth state listener
+  const unsubscribe = onAuthStateChange((firebaseUser) => {
+    if (firebaseUser) {
+      // User is signed in with Firebase
+      currentUser.value = {
+        id: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName || firebaseUser.email
+      }
+      console.log('Firebase user detected in EventCard:', firebaseUser.email)
+    } else if (localUser) {
+      // Fall back to local storage user
+      currentUser.value = localUser
+      console.log('Local storage user detected in EventCard:', currentUser.value)
+    } else {
+      // No user found
+      currentUser.value = null
+    }
+  })
+
+  // Clean up the listener on unmount
+  onUnmounted(() => {
+    unsubscribe()
+  })
+})
 </script>
 
 <style scoped>

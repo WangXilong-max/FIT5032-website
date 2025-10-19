@@ -6,13 +6,12 @@
           <div class="text-center mb-4">
             <h2 class="display-4 fw-bold text-dark">Activity Display</h2>
             <p class="lead text-muted">Following are the created activities</p>
-            <button
-              type="button"
+            <router-link
+              to="/create-activity"
               class="btn btn-primary btn-lg mt-3"
-              @click="$emit('create-event')"
             >
               <i class="bi bi-plus-circle me-2"></i>Create New Activity
-            </button>
+            </router-link>
           </div>
         </div>
       </div>
@@ -23,6 +22,8 @@
               :event="event"
               @delete="$emit('delete', $event)"
               @rate="$emit('rate', $event)"
+              @join="$emit('join', $event)"
+              @leave="$emit('leave', $event)"
             />
           </div>
         </div>
@@ -37,13 +38,19 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
 import EventCard from '../components/EventCard.vue'
 
-defineProps({
+const props = defineProps({
   events: Array
 })
 
-defineEmits(['delete', 'rate', 'create-event'])
+const emit = defineEmits(['delete', 'rate', 'join', 'leave'])
+
+onMounted(() => {
+  console.log('ActivitiesView mounted, events received:', props.events?.length || 0)
+  console.log('Events data:', props.events)
+})
 </script><style scoped>
 .bg-gradient-light {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
