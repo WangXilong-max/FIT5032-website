@@ -5,6 +5,7 @@ import {
   getDocs,
   getDoc,
   addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -13,7 +14,7 @@ import {
   serverTimestamp,
   arrayUnion,
   arrayRemove,
-  increment
+  increment,
 } from 'firebase/firestore'
 import { db } from './config'
 
@@ -31,7 +32,7 @@ export const getAllActivities = async () => {
     querySnapshot.forEach((doc) => {
       activities.push({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       })
     })
 
@@ -55,7 +56,7 @@ export const getActivityById = async (activityId) => {
     if (activitySnap.exists()) {
       return {
         id: activitySnap.id,
-        ...activitySnap.data()
+        ...activitySnap.data(),
       }
     } else {
       return null
@@ -74,8 +75,28 @@ export const getActivityById = async (activityId) => {
 export const createActivity = async (activityData) => {
   try {
     const activitiesRef = collection(db, 'activities')
-    // 创建者自动加入participants，人数为1
     const creatorId = activityData.creatorId
+
+    // Ensure creator's profile exists in Firestore
+    try {
+      const existingProfile = await getUserProfile(creatorId)
+      if (!existingProfile) {
+        // Get current user from Firebase Auth
+        const { auth } = await import('./config')
+        const currentUser = auth.currentUser
+        if (currentUser && currentUser.uid === creatorId) {
+          // Save creator's profile to Firestore
+          await saveUserProfile(creatorId, {
+            email: currentUser.email || activityData.creatorEmail,
+            displayName: currentUser.displayName || activityData.creatorName || currentUser.email,
+          })
+        }
+      }
+    } catch (profileError) {
+      console.error('Error ensuring creator profile:', profileError)
+      // Continue creating activity even if profile creation fails
+    }
+
     const docRef = await addDoc(activitiesRef, {
       ...activityData,
       participants: [creatorId],
@@ -83,14 +104,14 @@ export const createActivity = async (activityData) => {
       ratings: [],
       averageRating: 0,
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     })
 
     return {
       id: docRef.id,
       ...activityData,
       participants: [creatorId],
-      participantCount: 1
+      participantCount: 1,
     }
   } catch (error) {
     console.error('Error creating activity:', error)
@@ -109,7 +130,7 @@ export const updateActivity = async (activityId, updates) => {
     const activityRef = doc(db, 'activities', activityId)
     await updateDoc(activityRef, {
       ...updates,
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     })
 
     return true
@@ -151,7 +172,7 @@ export const getActivitiesByCreator = async (userId) => {
     querySnapshot.forEach((doc) => {
       activities.push({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       })
     })
 
@@ -172,11 +193,31 @@ export const getActivitiesByCreator = async (userId) => {
  */
 export const joinActivity = async (activityId, userId) => {
   try {
+    // Ensure user's profile exists in Firestore
+    try {
+      const existingProfile = await getUserProfile(userId)
+      if (!existingProfile) {
+        // Get current user from Firebase Auth
+        const { auth } = await import('./config')
+        const currentUser = auth.currentUser
+        if (currentUser && currentUser.uid === userId) {
+          // Save user's profile to Firestore
+          await saveUserProfile(userId, {
+            email: currentUser.email,
+            displayName: currentUser.displayName || currentUser.email,
+          })
+        }
+      }
+    } catch (profileError) {
+      console.error('Error ensuring user profile:', profileError)
+      // Continue joining activity even if profile creation fails
+    }
+
     const activityRef = doc(db, 'activities', activityId)
     await updateDoc(activityRef, {
       participants: arrayUnion(userId),
       participantCount: increment(1),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     })
 
     return true
@@ -198,7 +239,7 @@ export const leaveActivity = async (activityId, userId) => {
     await updateDoc(activityRef, {
       participants: arrayRemove(userId),
       participantCount: increment(-1),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     })
 
     return true
@@ -223,7 +264,7 @@ export const getJoinedActivities = async (userId) => {
     querySnapshot.forEach((doc) => {
       activities.push({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       })
     })
 
@@ -256,24 +297,50 @@ export const getActivityParticipants = async (activityId) => {
       return []
     }
 
+    // Import Firebase Auth to get user data
+    const { auth } = await import('./config')
+    const { getAuth } = await import('firebase/auth')
+
     // Fetch user details for each participant
     const participants = []
     for (const userId of participantIds) {
-      const userProfile = await getUserProfile(userId)
-      if (userProfile) {
+      try {
+        // Try to get from Firestore first
+        const userProfile = await getUserProfile(userId)
+        if (userProfile && userProfile.email) {
+          participants.push({
+            userId,
+            email: userProfile.email,
+            displayName: userProfile.displayName || userProfile.email,
+            joinedAt: userProfile.joinedAt || new Date().toISOString(),
+          })
+        } else {
+          // Fallback: Try to get current user's email from Firebase Auth if it's the logged in user
+          const currentUser = auth.currentUser
+          if (currentUser && currentUser.uid === userId) {
+            participants.push({
+              userId,
+              email: currentUser.email || 'Anonymous User',
+              displayName: currentUser.displayName || currentUser.email || 'Anonymous',
+              joinedAt: new Date().toISOString(),
+            })
+          } else {
+            // Last resort: show user ID prefix
+            participants.push({
+              userId,
+              email: `User ${userId.substring(0, 8)}`,
+              displayName: `User ${userId.substring(0, 8)}`,
+              joinedAt: new Date().toISOString(),
+            })
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching participant:', userId, err)
         participants.push({
           userId,
-          email: userProfile.email || 'N/A',
-          displayName: userProfile.displayName || userProfile.email || 'Anonymous',
-          joinedAt: userProfile.joinedAt || new Date().toISOString()
-        })
-      } else {
-        // If user profile doesn't exist, add basic info
-        participants.push({
-          userId,
-          email: 'N/A',
-          displayName: 'User ' + userId.substring(0, 6),
-          joinedAt: new Date().toISOString()
+          email: `User ${userId.substring(0, 8)}`,
+          displayName: `User ${userId.substring(0, 8)}`,
+          joinedAt: new Date().toISOString(),
         })
       }
     }
@@ -309,21 +376,21 @@ export const addRating = async (activityId, rating, userId) => {
     let ratings = activityData.ratings || []
 
     // Check if user has already rated this activity
-    const existingRatingIndex = ratings.findIndex(r => r.userId === userId)
+    const existingRatingIndex = ratings.findIndex((r) => r.userId === userId)
 
     if (existingRatingIndex !== -1) {
       // Update existing rating
       ratings[existingRatingIndex] = {
         rating: parseInt(rating),
         userId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       }
     } else {
       // Add new rating
       const newRating = {
         rating: parseInt(rating),
         userId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       }
       ratings.push(newRating)
     }
@@ -334,7 +401,7 @@ export const addRating = async (activityId, rating, userId) => {
     await updateDoc(activityRef, {
       ratings,
       averageRating,
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     })
 
     return true
@@ -342,7 +409,9 @@ export const addRating = async (activityId, rating, userId) => {
     console.error('❌ Error adding rating:', error)
     return false
   }
-}// ==================== USERS COLLECTION ====================
+}
+
+// ==================== USERS COLLECTION ====================
 
 /**
  * Create or update user profile
@@ -353,18 +422,21 @@ export const addRating = async (activityId, rating, userId) => {
 export const saveUserProfile = async (userId, userData) => {
   try {
     const userRef = doc(db, 'users', userId)
-    await updateDoc(userRef, {
-      ...userData,
-      updatedAt: serverTimestamp()
-    }).catch(async () => {
-      // If user doesn't exist, create new document
-      await addDoc(collection(db, 'users'), {
-        id: userId,
+    
+    // Try to update first, if doesn't exist, create with setDoc
+    try {
+      await updateDoc(userRef, {
+        ...userData,
+        updatedAt: serverTimestamp(),
+      })
+    } catch (error) {
+      // If document doesn't exist, create it with setDoc (using userId as document ID)
+      await setDoc(userRef, {
         ...userData,
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       })
-    })
+    }
 
     return true
   } catch (error) {
@@ -386,7 +458,7 @@ export const getUserProfile = async (userId) => {
     if (userSnap.exists()) {
       return {
         id: userSnap.id,
-        ...userSnap.data()
+        ...userSnap.data(),
       }
     }
     return null
@@ -406,16 +478,17 @@ export const getDashboardStats = async () => {
 
     const stats = {
       totalActivities: activities.length,
-      upcomingActivities: activities.filter(a => a.status === 'upcoming').length,
-      ongoingActivities: activities.filter(a => a.status === 'ongoing').length,
+      upcomingActivities: activities.filter((a) => a.status === 'upcoming').length,
+      ongoingActivities: activities.filter((a) => a.status === 'ongoing').length,
       totalParticipants: activities.reduce((sum, a) => sum + (a.participantCount || 0), 0),
-      averageRating: activities.reduce((sum, a) => sum + (a.averageRating || 0), 0) / activities.length || 0,
+      averageRating:
+        activities.reduce((sum, a) => sum + (a.averageRating || 0), 0) / activities.length || 0,
       categoryCounts: {},
-      recentActivities: activities.slice(0, 5)
+      recentActivities: activities.slice(0, 5),
     }
 
     // Count activities by category
-    activities.forEach(activity => {
+    activities.forEach((activity) => {
       const category = activity.category || 'Other'
       stats.categoryCounts[category] = (stats.categoryCounts[category] || 0) + 1
     })
@@ -450,5 +523,5 @@ export default {
   getUserProfile,
 
   // Dashboard
-  getDashboardStats
+  getDashboardStats,
 }

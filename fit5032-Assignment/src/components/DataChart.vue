@@ -15,8 +15,8 @@ export default {
     data: Object,
     options: {
       type: Object,
-      default: () => ({})
-    }
+      default: () => ({}),
+    },
   },
   setup(props) {
     const canvas = ref(null)
@@ -35,8 +35,8 @@ export default {
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            ...props.options
-          }
+            ...props.options,
+          },
         })
       }
     }
@@ -52,11 +52,12 @@ export default {
     })
 
     return {
-      canvas
+      canvas,
     }
-  }
+  },
 }
-</script><style scoped>
+</script>
+<style scoped>
 .chart-wrapper {
   position: relative;
   height: 300px;

@@ -5,13 +5,7 @@
       <form @submit.prevent="handleSignIn">
         <div class="form-group">
           <label for="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            v-model="email"
-            required
-            placeholder="Enter your email"
-          />
+          <input type="email" id="email" v-model="email" required placeholder="Enter your email" />
         </div>
 
         <div class="form-group">
@@ -91,9 +85,9 @@ export default {
       password,
       loading,
       error,
-      handleSignIn
+      handleSignIn,
     }
-  }
+  },
 }
 </script>
 

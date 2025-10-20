@@ -1,10 +1,20 @@
 <template>
-  <nav class="navbar navbar-expand-lg navbar-dark fixed-top" :class="{ 'navbar-scrolled': isScrolled }">
+  <nav
+    class="navbar navbar-expand-lg navbar-dark fixed-top"
+    :class="{ 'navbar-scrolled': isScrolled }"
+  >
     <div class="container">
       <router-link to="/" class="navbar-brand fw-bold">
         <span class="brand-text">SportSync</span>
       </router-link>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-label="Toggle navigation menu">
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-label="Toggle navigation menu"
+      >
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
@@ -16,13 +26,19 @@
             <router-link to="/news" class="nav-link" active-class="active">Sports News</router-link>
           </li>
           <li class="nav-item">
-            <router-link to="/activities" class="nav-link" active-class="active">Book Activities</router-link>
+            <router-link to="/activities" class="nav-link" active-class="active"
+              >Book Activities</router-link
+            >
           </li>
           <li class="nav-item">
-            <router-link to="/my-activities" class="nav-link" active-class="active">My Activities</router-link>
+            <router-link to="/my-activities" class="nav-link" active-class="active"
+              >My Activities</router-link
+            >
           </li>
           <li class="nav-item">
-            <router-link to="/dashboard" class="nav-link" active-class="active">Dashboard</router-link>
+            <router-link to="/dashboard" class="nav-link" active-class="active"
+              >Dashboard</router-link
+            >
           </li>
 
           <!-- Show Login/Register when NOT logged in -->
@@ -31,7 +47,12 @@
               <router-link to="/signin" class="nav-link" active-class="active">Login</router-link>
             </li>
             <li class="nav-item">
-              <router-link to="/register" class="nav-link btn btn-outline-light ms-2" active-class="active">Register</router-link>
+              <router-link
+                to="/register"
+                class="nav-link btn btn-outline-light ms-2"
+                active-class="active"
+                >Register</router-link
+              >
             </li>
           </template>
 
@@ -64,7 +85,7 @@ import { STORAGE_KEYS, saveToLocalStorage, loadFromLocalStorage } from '@/utils/
 const router = useRouter()
 
 defineProps({
-  isScrolled: Boolean
+  isScrolled: Boolean,
 })
 
 const currentUser = ref(null)
@@ -100,7 +121,7 @@ onMounted(() => {
       currentUser.value = {
         id: firebaseUser.uid,
         email: firebaseUser.email,
-        displayName: firebaseUser.displayName || firebaseUser.email
+        displayName: firebaseUser.displayName || firebaseUser.email,
       }
       console.log('NavigationBar - User logged in:', firebaseUser.email)
     } else {

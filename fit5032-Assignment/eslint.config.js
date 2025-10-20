@@ -10,12 +10,24 @@ export default defineConfig([
     files: ['**/*.{js,mjs,jsx,vue}'],
   },
 
-  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
+  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**', '**/node_modules/**']),
 
   {
+    name: 'app/browser-env',
+    files: ['src/**/*.{js,mjs,jsx,vue}'],
     languageOptions: {
       globals: {
         ...globals.browser,
+      },
+    },
+  },
+
+  {
+    name: 'app/node-env',
+    files: ['functions/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
       },
     },
   },

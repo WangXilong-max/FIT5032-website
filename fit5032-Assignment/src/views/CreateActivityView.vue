@@ -25,65 +25,89 @@
       <!-- Main Content (only show if logged in) -->
       <div v-else>
         <!-- Page Header -->
-      <div class="row mb-5">
-        <div class="col-12">
-          <div class="text-center mb-4">
-            <h1 class="display-4 fw-bold text-white">
-              Create New Activity
-            </h1>
-            <p class="lead text-white">Plan your sports event with location mapping</p>
+        <div class="row mb-5">
+          <div class="col-12">
+            <div class="text-center mb-4">
+              <h1 class="display-4 fw-bold text-white">Create New Activity</h1>
+              <p class="lead text-white">Plan your sports event with location mapping</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Form Content -->
-      <main id="main-content">
-        <div class="row justify-content-center">
-          <div class="col-lg-10">
-            <form @submit.prevent="handleSubmit">
-            <div class="row">
-              <!-- Event Name -->
-              <div class="col-md-6 mb-4">
-                <label for="eventName" class="form-label fw-bold">
-                  Event Name <span class="text-danger">*</span>
-                </label>
-                <input
-                  type="text"
-                  class="form-control form-control-lg"
-                  id="eventName"
-                  v-model="form.eventName"
-                  @blur="touched.eventName = true; validateField('eventName')"
-                  :class="{ 'is-invalid': touched.eventName && errors.eventName }"
-                  placeholder="Enter event name"
-                  required
-                >
-                <div v-if="touched.eventName && errors.eventName" class="invalid-feedback">
-                  {{ errors.eventName }}
-                </div>
-              </div>
+        <!-- Form Content -->
+        <main id="main-content">
+          <div class="row justify-content-center">
+            <div class="col-lg-10">
+              <form @submit.prevent="handleSubmit">
+                <div class="row">
+                  <!-- Event Name -->
+                  <div class="col-md-6 mb-4">
+                    <label for="eventName" class="form-label fw-bold">
+                      Event Name <span class="text-danger" aria-label="required">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      class="form-control form-control-lg"
+                      id="eventName"
+                      v-model="form.eventName"
+                      @blur="touched.eventName = true; validateField('eventName')"
+                      :class="{ 'is-invalid': touched.eventName && errors.eventName }"
+                      :aria-describedby="
+                        touched.eventName && errors.eventName ? 'eventName-error' : 'eventName-desc'
+                      "
+                      aria-required="true"
+                      placeholder="Enter event name"
+                      required
+                    />
+                    <small
+                      v-if="!errors.eventName"
+                      id="eventName-desc"
+                      class="form-text text-muted"
+                    >
+                      Enter the name of your event
+                    </small>
+                    <div
+                      v-if="touched.eventName && errors.eventName"
+                      id="eventName-error"
+                      class="invalid-feedback"
+                      role="alert"
+                    >
+                      {{ errors.eventName }}
+                    </div>
+                  </div>
 
-              <!-- Sport Category -->
-              <div class="col-md-6 mb-4">
-                <label for="category" class="form-label fw-bold">
-                  Sport Category <span class="text-danger">*</span>
-                </label>
-                <select
-                  class="form-select form-select-lg"
-                  id="category"
-                  v-model="form.category"
-                  @blur="touched.category = true; validateField('category')"
-                  :class="{ 'is-invalid': touched.category && errors.category }"
-                  required
-                >
-                  <option value="">Select sport category</option>
-                  <option v-for="category in categories" :key="category" :value="category">
-                    {{ category }}
-                  </option>
-                </select>
-                <div v-if="touched.category && errors.category" class="invalid-feedback">
-                  {{ errors.category }}
-                </div>
-              </div>                  <!-- Event Date -->
+                  <!-- Sport Category -->
+                  <div class="col-md-6 mb-4">
+                    <label for="category" class="form-label fw-bold">
+                      Sport Category <span class="text-danger" aria-label="required">*</span>
+                    </label>
+                    <select
+                      class="form-select form-select-lg"
+                      id="category"
+                      v-model="form.category"
+                      @blur="touched.category = true; validateField('category')"
+                      :class="{ 'is-invalid': touched.category && errors.category }"
+                      :aria-describedby="
+                        touched.category && errors.category ? 'category-error' : ''
+                      "
+                      aria-required="true"
+                      required
+                    >
+                      <option value="">Select sport category</option>
+                      <option v-for="category in categories" :key="category" :value="category">
+                        {{ category }}
+                      </option>
+                    </select>
+                    <div
+                      v-if="touched.category && errors.category"
+                      id="category-error"
+                      class="invalid-feedback"
+                      role="alert"
+                    >
+                      {{ errors.category }}
+                    </div>
+                  </div>
+                  <!-- Event Date -->
                   <div class="col-md-6 mb-4">
                     <label for="eventDate" class="form-label fw-bold">
                       Event Date <span class="text-danger">*</span>
@@ -95,10 +119,19 @@
                       v-model="form.eventDate"
                       @blur="touched.eventDate = true; validateField('eventDate')"
                       :class="{ 'is-invalid': touched.eventDate && errors.eventDate }"
+                      :aria-describedby="
+                        touched.eventDate && errors.eventDate ? 'eventDate-error' : ''
+                      "
+                      aria-required="true"
                       :min="today"
                       required
+                    />
+                    <div
+                      v-if="touched.eventDate && errors.eventDate"
+                      id="eventDate-error"
+                      class="invalid-feedback"
+                      role="alert"
                     >
-                    <div v-if="touched.eventDate && errors.eventDate" class="invalid-feedback">
                       {{ errors.eventDate }}
                     </div>
                   </div>
@@ -115,9 +148,18 @@
                       v-model="form.eventTime"
                       @blur="touched.eventTime = true; validateField('eventTime')"
                       :class="{ 'is-invalid': touched.eventTime && errors.eventTime }"
+                      :aria-describedby="
+                        touched.eventTime && errors.eventTime ? 'eventTime-error' : ''
+                      "
+                      aria-required="true"
                       required
+                    />
+                    <div
+                      v-if="touched.eventTime && errors.eventTime"
+                      id="eventTime-error"
+                      class="invalid-feedback"
+                      role="alert"
                     >
-                    <div v-if="touched.eventTime && errors.eventTime" class="invalid-feedback">
                       {{ errors.eventTime }}
                     </div>
                   </div>
@@ -137,24 +179,35 @@
                           @blur="touched.location = true; validateField('location')"
                           @input="searchLocation"
                           :class="{ 'is-invalid': touched.location && errors.location }"
+                          :aria-describedby="
+                            touched.location && errors.location ? 'location-error' : ''
+                          "
+                          aria-required="true"
                           placeholder="Search for location or enter address"
                           required
-                        >
+                        />
                         <div v-if="touched.location && errors.location" class="invalid-feedback">
                           {{ errors.location }}
                         </div>
 
                         <!-- Location Suggestions -->
-                        <div v-if="locationSuggestions.length > 0" class="mt-2">
-                          <div class="list-group">
+                        <div
+                          v-if="locationSuggestions.length > 0"
+                          class="mt-2"
+                          role="region"
+                          aria-label="Location suggestions"
+                        >
+                          <div class="list-group" role="listbox">
                             <button
                               v-for="suggestion in locationSuggestions"
                               :key="suggestion.place_id"
                               type="button"
                               class="list-group-item list-group-item-action"
                               @click="selectLocation(suggestion)"
+                              role="option"
+                              :aria-label="`Select ${suggestion.description}`"
                             >
-                              <i class="bi bi-geo-alt me-2"></i>{{ suggestion.description }}
+                              <i class="bi bi-geo-alt me-2" aria-hidden="true"></i>{{ suggestion.description }}
                             </button>
                           </div>
                         </div>
@@ -165,8 +218,10 @@
                           class="btn btn-outline-primary btn-lg w-100"
                           @click="getCurrentLocation"
                           :disabled="gettingLocation"
+                          aria-label="Get current location and add to map"
+                          title="Click to use your device's current location"
                         >
-                          <i class="bi bi-geo-alt-fill me-2"></i>
+                          <i class="bi bi-geo-alt-fill me-2" aria-hidden="true"></i>
                           {{ gettingLocation ? 'Getting Location...' : 'Use Current Location' }}
                         </button>
                       </div>
@@ -175,8 +230,17 @@
 
                   <!-- Map Display -->
                   <div class="col-12 mb-4">
+                    <label id="map-label" class="form-label fw-bold">
+                      Event Location Map <span class="text-danger" aria-label="required">*</span>
+                    </label>
                     <div class="map-container">
-                      <div id="map" style="height: 400px; width: 100%; border-radius: 8px;"></div>
+                      <div
+                        id="map"
+                        style="height: 400px; width: 100%; border-radius: 8px"
+                        role="region"
+                        aria-labelledby="map-label"
+                        aria-label="Interactive map for selecting event location. Click on the map to select a location, or drag the marker to adjust the position."
+                      ></div>
                     </div>
                   </div>
 
@@ -192,19 +256,32 @@
                       v-model="form.maxParticipants"
                       @blur="touched.maxParticipants = true; validateField('maxParticipants')"
                       :class="{ 'is-invalid': touched.maxParticipants && errors.maxParticipants }"
+                      :aria-describedby="
+                        touched.maxParticipants && errors.maxParticipants
+                          ? 'maxParticipants-error'
+                          : ''
+                      "
+                      aria-required="true"
                       placeholder="Enter number of participants"
                       min="1"
                       max="1000"
                       required
+                    />
+                    <div
+                      v-if="touched.maxParticipants && errors.maxParticipants"
+                      id="maxParticipants-error"
+                      class="invalid-feedback"
+                      role="alert"
                     >
-                    <div v-if="touched.maxParticipants && errors.maxParticipants" class="invalid-feedback">
                       {{ errors.maxParticipants }}
                     </div>
                   </div>
 
                   <!-- Registration Fee -->
                   <div class="col-md-6 mb-4">
-                    <label for="registrationFee" class="form-label fw-bold">Registration Fee (AUD)</label>
+                    <label for="registrationFee" class="form-label fw-bold"
+                      >Registration Fee (AUD)</label
+                    >
                     <input
                       type="number"
                       class="form-control form-control-lg"
@@ -213,7 +290,7 @@
                       placeholder="Enter fee (optional)"
                       min="0"
                       step="0.01"
-                    >
+                    />
                   </div>
 
                   <!-- Description -->
@@ -237,7 +314,7 @@
                       id="equipment"
                       v-model="form.equipment"
                       placeholder="e.g., Bring your own racket, balls provided"
-                    >
+                    />
                   </div>
                 </div>
 
@@ -245,10 +322,18 @@
                 <div class="row mt-4">
                   <div class="col-12">
                     <div class="d-flex gap-3 justify-content-center">
-                      <button type="button" class="btn btn-outline-secondary btn-lg px-5" @click="goBack">
+                      <button
+                        type="button"
+                        class="btn btn-outline-secondary btn-lg px-5"
+                        @click="goBack"
+                      >
                         <i class="bi bi-arrow-left me-2"></i>Cancel
                       </button>
-                      <button type="submit" class="btn btn-primary btn-lg px-5" :disabled="!isFormValid || isSubmitting">
+                      <button
+                        type="submit"
+                        class="btn btn-primary btn-lg px-5"
+                        :disabled="!isFormValid || isSubmitting"
+                      >
                         <i class="bi bi-check-circle me-2"></i>
                         {{ isSubmitting ? 'Creating...' : 'Create Activity' }}
                       </button>
@@ -282,7 +367,8 @@ const currentUser = ref(null)
 const isCheckingAuth = ref(true)
 
 // Mapbox configuration
-const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1Ijoid3hsMTIzNzg5IiwiYSI6ImNtZHlid2h1bDAwYmEya3BzMmpvbGFzb2UifQ.PNnx74NZhnHUfa5d1Q_c3w'
+const MAPBOX_ACCESS_TOKEN =
+  'pk.eyJ1Ijoid3hsMTIzNzg5IiwiYSI6ImNtZHlid2h1bDAwYmEya3BzMmpvbGFzb2UifQ.PNnx74NZhnHUfa5d1Q_c3w'
 mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN
 
 // Form data
@@ -297,7 +383,7 @@ const form = reactive({
   description: '',
   equipment: '',
   latitude: null,
-  longitude: null
+  longitude: null,
 })
 
 // Form validation
@@ -307,7 +393,7 @@ const touched = reactive({
   eventDate: false,
   eventTime: false,
   location: false,
-  maxParticipants: false
+  maxParticipants: false,
 })
 
 const errors = reactive({
@@ -316,7 +402,7 @@ const errors = reactive({
   eventDate: '',
   eventTime: '',
   location: '',
-  maxParticipants: ''
+  maxParticipants: '',
 })
 
 // Component state
@@ -334,25 +420,47 @@ const today = computed(() => {
 const categories = computed(() => sportCategories)
 
 const isFormValid = computed(() => {
-  return form.eventName &&
-         form.category &&
-         form.eventDate &&
-         form.eventTime &&
-         form.location &&
-         form.latitude &&
-         form.longitude &&
-         form.maxParticipants &&
-         !Object.values(errors).some(error => error)
+  return (
+    form.eventName &&
+    form.category &&
+    form.eventDate &&
+    form.eventTime &&
+    form.location &&
+    form.latitude &&
+    form.longitude &&
+    form.maxParticipants &&
+    !Object.values(errors).some((error) => error)
+  )
 })
 
 // Validation functions
 const validationRules = {
-  eventName: (value) => !value.trim() ? 'Event name is required' : value.length < 3 ? 'Event name must be at least 3 characters' : '',
-  category: (value) => !value ? 'Please select a sport category' : '',
-  eventDate: (value) => !value ? 'Event date is required' : new Date(value) < new Date() ? 'Event date cannot be in the past' : '',
-  eventTime: (value) => !value ? 'Event time is required' : '',
-  location: (value) => !value.trim() ? 'Event location is required' : (!form.latitude || !form.longitude) ? 'Please select location from map or use current location' : '',
-  maxParticipants: (value) => !value ? 'Maximum participants is required' : (value < 1 || value > 1000) ? 'Participants must be between 1 and 1000' : ''
+  eventName: (value) =>
+    !value.trim()
+      ? 'Event name is required'
+      : value.length < 3
+        ? 'Event name must be at least 3 characters'
+        : '',
+  category: (value) => (!value ? 'Please select a sport category' : ''),
+  eventDate: (value) =>
+    !value
+      ? 'Event date is required'
+      : new Date(value) < new Date()
+        ? 'Event date cannot be in the past'
+        : '',
+  eventTime: (value) => (!value ? 'Event time is required' : ''),
+  location: (value) =>
+    !value.trim()
+      ? 'Event location is required'
+      : !form.latitude || !form.longitude
+        ? 'Please select location from map or use current location'
+        : '',
+  maxParticipants: (value) =>
+    !value
+      ? 'Maximum participants is required'
+      : value < 1 || value > 1000
+        ? 'Participants must be between 1 and 1000'
+        : '',
 }
 
 const validateField = (field) => {
@@ -374,7 +482,7 @@ const initializeMapbox = () => {
       container: 'map',
       style: 'mapbox://styles/mapbox/streets-v12',
       center: [144.9631, -37.8136],
-      zoom: 13
+      zoom: 13,
     })
 
     map.value.addControl(new mapboxgl.NavigationControl(), 'top-right')
@@ -390,15 +498,15 @@ const searchLocation = async () => {
   if (form.location.length > 2) {
     try {
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(form.location)}.json?access_token=${MAPBOX_ACCESS_TOKEN}&country=AU&limit=5`
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(form.location)}.json?access_token=${MAPBOX_ACCESS_TOKEN}&country=AU&limit=5`,
       )
       const data = await response.json()
 
       if (data.features && data.features.length > 0) {
-        locationSuggestions.value = data.features.map(feature => ({
+        locationSuggestions.value = data.features.map((feature) => ({
           place_id: feature.id,
           description: feature.place_name,
-          coordinates: feature.center
+          coordinates: feature.center,
         }))
       } else {
         locationSuggestions.value = []
@@ -415,7 +523,7 @@ const searchLocation = async () => {
 const reverseGeocode = async (lng, lat) => {
   try {
     const response = await fetch(
-      `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_ACCESS_TOKEN}`
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_ACCESS_TOKEN}`,
     )
     const data = await response.json()
 
@@ -450,7 +558,7 @@ const getCurrentLocation = () => {
         console.error('Error getting location:', error)
         alert('Unable to get your current location. Please enter the address manually.')
         gettingLocation.value = false
-      }
+      },
     )
   } else {
     alert('Geolocation is not supported by this browser.')
@@ -465,7 +573,7 @@ const updateMapLocation = (coordinates) => {
     map.value.flyTo({
       center: [lng, lat],
       zoom: 15,
-      duration: 1000
+      duration: 1000,
     })
 
     // Remove existing marker
@@ -476,7 +584,7 @@ const updateMapLocation = (coordinates) => {
     // Add new marker
     marker.value = new mapboxgl.Marker({
       color: '#000000',
-      draggable: true
+      draggable: true,
     })
       .setLngLat([lng, lat])
       .addTo(map.value)
@@ -492,7 +600,7 @@ const updateMapLocation = (coordinates) => {
 // Form submission
 const handleSubmit = async () => {
   // Validate all fields
-  Object.keys(touched).forEach(field => {
+  Object.keys(touched).forEach((field) => {
     touched[field] = true
     validateField(field)
   })
@@ -507,21 +615,21 @@ const handleSubmit = async () => {
   try {
     // Create event object
     const eventData = {
-  name: form.eventName,
-  category: form.category,
-  date: form.eventDate,
-  time: form.eventTime,
-  location: form.location,
-  maxParticipants: parseInt(form.maxParticipants),
-  price: parseFloat(form.registrationFee) || 0,
-  description: form.description || 'No description provided',
-  equipment: form.equipment,
-  latitude: form.latitude,
-  longitude: form.longitude,
-  status: 'upcoming',
-  creatorId: currentUser.value.id,
-  creatorName: currentUser.value.email || 'Anonymous',
-  creatorEmail: currentUser.value.email || ''
+      name: form.eventName,
+      category: form.category,
+      date: form.eventDate,
+      time: form.eventTime,
+      location: form.location,
+      maxParticipants: parseInt(form.maxParticipants),
+      price: parseFloat(form.registrationFee) || 0,
+      description: form.description || 'No description provided',
+      equipment: form.equipment,
+      latitude: form.latitude,
+      longitude: form.longitude,
+      status: 'upcoming',
+      creatorId: currentUser.value.id,
+      creatorName: currentUser.value.email || 'Anonymous',
+      creatorEmail: currentUser.value.email || '',
     }
 
     // Save to Firestore
@@ -557,7 +665,7 @@ onMounted(() => {
       currentUser.value = {
         id: firebaseUser.uid,
         email: firebaseUser.email,
-        displayName: firebaseUser.displayName || firebaseUser.email
+        displayName: firebaseUser.displayName || firebaseUser.email,
       }
     } else if (localUser) {
       currentUser.value = localUser
@@ -592,8 +700,8 @@ onMounted(() => {
 }
 
 .bg-gradient-light {
-  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.6)),
-              url('/backgroundactivity.jpg');
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.6)), url('/backgroundactivity.jpg');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;

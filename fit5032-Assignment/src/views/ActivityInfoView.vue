@@ -22,7 +22,10 @@
             <h1 class="h2 fw-bold mb-2">{{ activity.name }}</h1>
             <div class="d-flex gap-2">
               <span class="badge bg-primary">{{ activity.category }}</span>
-              <span class="badge" :class="activity.price === 0 ? 'bg-success' : 'bg-warning text-dark'">
+              <span
+                class="badge"
+                :class="activity.price === 0 ? 'bg-success' : 'bg-warning text-dark'"
+              >
                 {{ activity.price === 0 ? 'Free' : `$${activity.price}` }}
               </span>
             </div>
@@ -54,8 +57,10 @@
 
               <div class="mb-3">
                 <small class="text-muted d-block">Participants</small>
-                <strong>{{ activity.participantCount || 0 }} / {{ activity.maxParticipants }}</strong>
-                <div class="progress mt-1" style="height: 6px;">
+                <strong
+                  >{{ activity.participantCount || 0 }} / {{ activity.maxParticipants }}</strong
+                >
+                <div class="progress mt-1" style="height: 6px">
                   <div
                     class="progress-bar"
                     :class="getProgressBarClass()"
@@ -64,29 +69,37 @@
                 </div>
               </div>
 
-              <div v-if="isUserJoined || (currentUser && currentUser.id === activity.creatorId)" class="bg-light p-2 rounded mb-3">
+              <div
+                v-if="isUserJoined || (currentUser && currentUser.id === activity.creatorId)"
+                class="bg-light p-2 rounded mb-3"
+              >
                 <small class="fw-bold d-block mb-1">Participants:</small>
-                <div style="font-size: 0.85rem;">
+                <div style="font-size: 0.85rem">
                   <div v-for="p in participants" :key="p.userId">{{ p.email }}</div>
                 </div>
               </div>
 
               <div class="bg-light p-2 rounded mb-3">
                 <small class="fw-bold d-block mb-1">Organizer</small>
-                <small>{{ activity.creatorName || 'Unknown' }}</small><br>
+                <small>{{ activity.creatorName || 'Unknown' }}</small
+                ><br />
                 <small class="text-muted">{{ activity.creatorEmail }}</small>
               </div>
 
               <div v-if="currentUser && currentUser.id !== activity.creatorId" class="d-grid">
-                <button
-                  v-if="isUserJoined"
-                  class="btn btn-outline-danger btn-sm"
-                  @click="handleLeaveActivity"
-                  :disabled="actionLoading"
-                  aria-label="Leave this activity"
-                >
-                  {{ actionLoading ? 'Leaving...' : 'Leave' }}
-                </button>
+                <div v-if="isUserJoined">
+                  <button class="btn btn-success btn-sm w-100 mb-2" disabled>
+                    <i class="bi bi-check-circle me-1"></i>Booked
+                  </button>
+                  <button
+                    class="btn btn-outline-danger btn-sm w-100"
+                    @click="handleLeaveActivity"
+                    :disabled="actionLoading"
+                    aria-label="Leave this activity"
+                  >
+                    {{ actionLoading ? 'Leaving...' : 'Cancel Booking' }}
+                  </button>
+                </div>
                 <button
                   v-else
                   class="btn btn-primary btn-sm"
@@ -103,7 +116,7 @@
           <!-- Right Column - Map -->
           <div class="col-lg-6">
             <div class="border rounded overflow-hidden">
-              <div id="map" style="height: 400px; width: 100%;">
+              <div id="map" style="height: 400px; width: 100%">
                 <div
                   v-if="!activity.coordinates && !activity.latitude && !activity.longitude"
                   class="d-flex align-items-center justify-content-center h-100 bg-light"
@@ -146,8 +159,8 @@ export default {
     const router = useRouter()
 
     // State
-  const activity = ref(null)
-  const participants = ref([])
+    const activity = ref(null)
+    const participants = ref([])
     const loading = ref(true)
     const error = ref(null)
     const currentUser = ref(null)
@@ -175,7 +188,9 @@ export default {
 
     const getParticipantPercentage = () => {
       if (!activity.value) return 0
-      return Math.round(((activity.value.participantCount || 0) / activity.value.maxParticipants) * 100)
+      return Math.round(
+        ((activity.value.participantCount || 0) / activity.value.maxParticipants) * 100,
+      )
     }
 
     const getProgressBarClass = () => {
@@ -201,28 +216,26 @@ export default {
 
         // Fetch participant details
         try {
-          const participantList = await (await import('@/firebase/database')).getActivityParticipants(activityId.value)
+          const participantList = await (
+            await import('@/firebase/database')
+          ).getActivityParticipants(activityId.value)
           participants.value = participantList
         } catch {
           participants.value = []
         }
 
-        // Check for coordinates in different formats
-        if (data.coordinates) {
-        } else if (data.longitude && data.latitude) {
-          // Convert longitude/latitude to coordinates array [lng, lat]
-          data.coordinates = [data.longitude, data.latitude]
-        } else {
+        // Convert latitude/longitude to coordinates array if needed
+        if (!data.coordinates && data.longitude && data.latitude) {
+          activity.value.coordinates = [parseFloat(data.longitude), parseFloat(data.latitude)]
         }
 
         // Initialize map after activity is loaded and DOM is ready
         await nextTick()
 
-        if (data.coordinates) {
+        if (activity.value.coordinates || (activity.value.longitude && activity.value.latitude)) {
           setTimeout(() => {
             initMap()
           }, 100)
-        } else {
         }
       } catch (err) {
         console.error('Error loading activity:', err)
@@ -238,7 +251,7 @@ export default {
           (position) => {
             userLocation.value = {
               lng: position.coords.longitude,
-              lat: position.coords.latitude
+              lat: position.coords.latitude,
             }
             if (map.value) {
               addUserMarker()
@@ -246,14 +259,21 @@ export default {
           },
           (error) => {
             console.error('Error getting user location:', error)
-          }
+          },
         )
       }
     }
 
     const initMap = () => {
+      // Ensure coordinates exist, convert from latitude/longitude if needed
       if (!activity.value?.coordinates) {
-        if (activity.value) {
+        if (activity.value?.longitude && activity.value?.latitude) {
+          activity.value.coordinates = [
+            parseFloat(activity.value.longitude),
+            parseFloat(activity.value.latitude),
+          ]
+        } else if (activity.value) {
+          // Default to Melbourne if no location data
           activity.value.coordinates = [144.9631, -37.8136]
         } else {
           return
@@ -279,7 +299,7 @@ export default {
           container: 'map',
           style: 'mapbox://styles/mapbox/streets-v12',
           center: [lng, lat],
-          zoom: 13
+          zoom: 13,
         })
 
         map.value.addControl(new mapboxgl.NavigationControl())
@@ -298,11 +318,10 @@ export default {
           activityMarker.value = new mapboxgl.Marker(el)
             .setLngLat([lng, lat])
             .setPopup(
-              new mapboxgl.Popup({ offset: 25 })
-                .setHTML(`
+              new mapboxgl.Popup({ offset: 25 }).setHTML(`
                   <h6>${activity.value.name}</h6>
                   <p class="mb-0 small">${activity.value.location}</p>
-                `)
+                `),
             )
             .addTo(map.value)
 
@@ -364,8 +383,8 @@ export default {
             data: {
               type: 'Feature',
               properties: {},
-              geometry: route
-            }
+              geometry: route,
+            },
           })
 
           map.value.addLayer({
@@ -374,13 +393,13 @@ export default {
             source: 'route',
             layout: {
               'line-join': 'round',
-              'line-cap': 'round'
+              'line-cap': 'round',
             },
             paint: {
               'line-color': '#3b82f6',
               'line-width': 5,
-              'line-opacity': 0.75
-            }
+              'line-opacity': 0.75,
+            },
           })
 
           directionsLayer.value = true
@@ -409,6 +428,11 @@ export default {
         return
       }
 
+      if (isUserJoined.value) {
+        alert('You have already joined this activity!')
+        return
+      }
+
       if (isFull.value) {
         alert('This activity is already full')
         return
@@ -419,7 +443,6 @@ export default {
         const success = await joinActivity(activityId.value, currentUser.value.id)
 
         if (success) {
-          // Removed sendActivityBookingNotification
           alert('Successfully joined the activity! The organizer has been notified.')
           await loadActivity()
         } else {
@@ -459,8 +482,16 @@ export default {
     // Lifecycle
     onMounted(() => {
       // Listen for auth state changes
-      onAuthStateChange((user) => {
-        currentUser.value = user
+      onAuthStateChange((firebaseUser) => {
+        if (firebaseUser) {
+          currentUser.value = {
+            id: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName || firebaseUser.email,
+          }
+        } else {
+          currentUser.value = null
+        }
       })
 
       loadActivity()
@@ -487,9 +518,9 @@ export default {
       handleJoinActivity,
       handleLeaveActivity,
       showDirections,
-      participants
+      participants,
     }
-  }
+  },
 }
 </script>
 

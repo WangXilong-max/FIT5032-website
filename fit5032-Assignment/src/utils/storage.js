@@ -1,7 +1,7 @@
 export const STORAGE_KEYS = {
   EVENTS: 'sportsync_events',
   USERS: 'sportsync_users',
-  CURRENT_USER: 'sportsync_current_user'
+  CURRENT_USER: 'sportsync_current_user',
 }
 
 export const saveToLocalStorage = (key, data) => {

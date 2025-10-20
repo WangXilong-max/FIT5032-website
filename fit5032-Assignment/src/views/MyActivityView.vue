@@ -77,16 +77,29 @@
                       <i class="bi bi-geo-alt"></i> {{ activity.location }}
                     </p>
                     <p class="text-muted mb-2">
-                      <i class="bi bi-people"></i> {{ activity.participantCount || 0 }}/{{ activity.maxParticipants }} participants
+                      <i class="bi bi-people"></i> {{ activity.participantCount || 0 }}/{{
+                        activity.maxParticipants
+                      }}
+                      participants
                     </p>
                     <div class="d-flex gap-2 align-items-center">
                       <span class="badge bg-primary">{{ activity.category }}</span>
-                      <button
-                        class="btn btn-sm btn-dark ms-auto"
-                        @click="viewParticipants(activity)"
-                      >
-                        <i class="bi bi-people-fill me-1"></i>View Participants
-                      </button>
+                      <div class="ms-auto d-flex gap-2">
+                        <button
+                          class="btn btn-sm btn-info text-white"
+                          @click="viewDetails(activity.id)"
+                          title="View activity details"
+                        >
+                          <i class="bi bi-eye me-1"></i>Check Details
+                        </button>
+                        <button
+                          class="btn btn-sm btn-danger"
+                          @click="deleteActivity(activity)"
+                          title="Delete this activity"
+                        >
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -120,7 +133,22 @@
                     <p class="text-muted mb-1">
                       <i class="bi bi-geo-alt"></i> {{ activity.location }}
                     </p>
-                    <span class="badge bg-success">{{ activity.category }}</span>
+                    <p class="text-muted mb-2">
+                      <i class="bi bi-people"></i> {{ activity.participantCount || 0 }}/{{
+                        activity.maxParticipants
+                      }}
+                      participants
+                    </p>
+                    <div class="d-flex gap-2 align-items-center">
+                      <span class="badge bg-success">{{ activity.category }}</span>
+                      <button
+                        class="btn btn-sm btn-info text-white ms-auto"
+                        @click="viewDetails(activity.id)"
+                        title="View activity details"
+                      >
+                        <i class="bi bi-eye me-1"></i>Check Details
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -141,6 +169,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction'
@@ -148,13 +177,16 @@ import { STORAGE_KEYS, loadFromLocalStorage } from '../utils/storage.js'
 import { onAuthStateChange } from '@/firebase/auth'
 import ParticipantsModal from '../components/ParticipantsModal.vue'
 import { Modal } from 'bootstrap'
+import { deleteActivity as deleteActivityFromDB } from '@/firebase/database'
+
+const router = useRouter()
 
 // Props
 const props = defineProps({
   events: {
     type: Array,
-    default: () => []
-  }
+    default: () => [],
+  },
 })
 
 // State
@@ -170,21 +202,21 @@ const calendarOptions = ref({
   headerToolbar: {
     left: 'prev,next today',
     center: 'title',
-    right: 'dayGridMonth,dayGridWeek'
+    right: 'dayGridMonth,dayGridWeek',
   },
   events: [],
-  height: 'auto'
+  height: 'auto',
 })
 
 // Computed
 const myCreatedActivities = computed(() => {
   if (!user.value || !props.events) return []
-  return props.events.filter(event => event.creatorId === user.value.id)
+  return props.events.filter((event) => event.creatorId === user.value.id)
 })
 
 const myJoinedActivities = computed(() => {
   if (!user.value || !props.events) return []
-  return props.events.filter(event => {
+  return props.events.filter((event) => {
     const isParticipant = event.participants?.includes(user.value.id)
     const notCreator = event.creatorId !== user.value.id
     return isParticipant && notCreator
@@ -197,11 +229,11 @@ const totalActivities = computed(() => {
 
 const calendarEvents = computed(() => {
   const allMyActivities = [...myCreatedActivities.value, ...myJoinedActivities.value]
-  return allMyActivities.map(activity => ({
+  return allMyActivities.map((activity) => ({
     id: activity.id,
     title: activity.name,
     date: activity.date,
-    backgroundColor: myCreatedActivities.value.includes(activity) ? '#0d6efd' : '#198754'
+    backgroundColor: myCreatedActivities.value.includes(activity) ? '#0d6efd' : '#198754',
   }))
 })
 
@@ -219,7 +251,7 @@ const loadUser = () => {
       user.value = {
         id: firebaseUser.uid,
         email: firebaseUser.email,
-        displayName: firebaseUser.displayName || firebaseUser.email
+        displayName: firebaseUser.displayName || firebaseUser.email,
       }
     } else if (!localUser) {
       user.value = null
@@ -243,6 +275,30 @@ const viewParticipants = (activity) => {
   }
 }
 
+const viewDetails = (activityId) => {
+  router.push(`/activities/${activityId}`)
+}
+
+const deleteActivity = async (activity) => {
+  if (!confirm(`Are you sure you want to delete "${activity.name}"?`)) {
+    return
+  }
+
+  try {
+    const success = await deleteActivityFromDB(activity.id)
+    if (success) {
+      alert('Activity deleted successfully!')
+      // Reload the page to refresh the activity list
+      window.location.reload()
+    } else {
+      alert('Failed to delete activity. Please try again.')
+    }
+  } catch (error) {
+    console.error('Error deleting activity:', error)
+    alert('An error occurred while deleting the activity.')
+  }
+}
+
 // Lifecycle
 onMounted(() => {
   loadUser()
@@ -250,17 +306,29 @@ onMounted(() => {
 })
 
 // Watch for changes and update calendar
-watch(() => props.events, () => {
-  updateCalendar()
-}, { deep: true })
+watch(
+  () => props.events,
+  () => {
+    updateCalendar()
+  },
+  { deep: true },
+)
 
-watch(() => user.value, () => {
-  updateCalendar()
-}, { deep: true })
+watch(
+  () => user.value,
+  () => {
+    updateCalendar()
+  },
+  { deep: true },
+)
 
-watch(() => calendarEvents.value, () => {
-  updateCalendar()
-}, { deep: true })
+watch(
+  () => calendarEvents.value,
+  () => {
+    updateCalendar()
+  },
+  { deep: true },
+)
 </script>
 
 <style scoped>

@@ -5,13 +5,7 @@
       <form @submit.prevent="handleRegister">
         <div class="form-group">
           <label for="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            v-model="email"
-            required
-            placeholder="Enter your email"
-          />
+          <input type="email" id="email" v-model="email" required placeholder="Enter your email" />
         </div>
 
         <div class="form-group">
@@ -122,9 +116,9 @@ export default {
       loading,
       error,
       success,
-      handleRegister
+      handleRegister,
     }
-  }
+  },
 }
 </script>
 

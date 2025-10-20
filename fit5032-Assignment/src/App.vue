@@ -14,7 +14,7 @@ const currentUser = ref(null)
 
 // Provide global state to child components
 provide('appState', {
-  events
+  events,
 })
 
 // Data loading
@@ -24,24 +24,24 @@ const loadDataFromStorage = async () => {
     const firestoreEvents = await getAllActivities()
 
     if (firestoreEvents.length > 0) {
-      events.value = firestoreEvents.map(event => ({
+      events.value = firestoreEvents.map((event) => ({
         ...event,
         ratings: event.ratings || [],
         averageRating: event.averageRating || 0,
         participants: event.participants || [],
-        participantCount: event.participantCount || 0
+        participantCount: event.participantCount || 0,
       }))
 
       saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
     } else {
       const savedEvents = loadFromLocalStorage(STORAGE_KEYS.EVENTS, [])
 
-      events.value = savedEvents.map(event => ({
+      events.value = savedEvents.map((event) => ({
         ...event,
         ratings: event.ratings || [],
         averageRating: event.averageRating || 0,
         participants: event.participants || [],
-        participantCount: event.participantCount || 0
+        participantCount: event.participantCount || 0,
       }))
     }
   } catch (error) {
@@ -59,18 +59,18 @@ const addEventToData = (newEvent) => {
 }
 
 const deleteEvent = async (eventId) => {
-  const event = events.value.find(e => e.id === eventId)
+  const event = events.value.find((e) => e.id === eventId)
   if (!event || event.creatorId !== currentUser.value?.id) {
     alert('Only creator can delete this event')
     return
   }
-  
+
   if (!confirm('Delete this event?')) return
-  
+
   try {
     const { deleteActivity } = await import('@/firebase/database')
     await deleteActivity(eventId)
-    events.value = events.value.filter(e => e.id !== eventId)
+    events.value = events.value.filter((e) => e.id !== eventId)
     saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
   } catch (error) {
     console.error('Error deleting event:', error)
@@ -79,7 +79,7 @@ const deleteEvent = async (eventId) => {
 }
 
 const rateEvent = async (eventId, rating) => {
-  const event = events.value.find(e => e.id === eventId)
+  const event = events.value.find((e) => e.id === eventId)
   if (!event || !rating || !currentUser.value) {
     return
   }
@@ -96,7 +96,6 @@ const rateEvent = async (eventId, rating) => {
 
     // Reload data from Firestore to get the updated ratings
     await loadDataFromStorage()
-
   } catch (error) {
     console.error('Error rating event:', error)
   }
@@ -105,19 +104,19 @@ const rateEvent = async (eventId, rating) => {
 const joinEvent = async (eventId) => {
   if (!currentUser.value) return
 
-  const event = events.value.find(e => e.id === eventId)
+  const event = events.value.find((e) => e.id === eventId)
   if (!event) return
 
   try {
     const { joinActivity } = await import('@/firebase/database')
     await joinActivity(eventId, currentUser.value.id)
 
-    events.value = events.value.map(e => {
+    events.value = events.value.map((e) => {
       if (e.id === eventId && !e.participants?.includes(currentUser.value.id)) {
         return {
           ...e,
           participants: [...(e.participants || []), currentUser.value.id],
-          participantCount: (e.participantCount || 0) + 1
+          participantCount: (e.participantCount || 0) + 1,
         }
       }
       return e
@@ -139,12 +138,12 @@ const leaveEvent = async (eventId) => {
     const { leaveActivity } = await import('@/firebase/database')
     await leaveActivity(eventId, currentUser.value.id)
 
-    events.value = events.value.map(e => {
+    events.value = events.value.map((e) => {
       if (e.id === eventId && e.participants?.includes(currentUser.value.id)) {
         return {
           ...e,
-          participants: e.participants.filter(id => id !== currentUser.value.id),
-          participantCount: Math.max(0, (e.participantCount || 1) - 1)
+          participants: e.participants.filter((id) => id !== currentUser.value.id),
+          participantCount: Math.max(0, (e.participantCount || 1) - 1),
         }
       }
       return e
@@ -165,22 +164,25 @@ const clearAllEvents = () => {
   }
 }
 
-// Lifecycle
+// Lifecycle - declare handlers at top level
+let handleScroll
+let unsubscribe
+
 onMounted(() => {
-  const handleScroll = () => {
+  handleScroll = () => {
     isScrolled.value = window.scrollY > 50
   }
   window.addEventListener('scroll', handleScroll)
   loadDataFromStorage()
 
   // Set up Firebase authentication listener
-  const unsubscribe = onAuthStateChange((firebaseUser) => {
+  unsubscribe = onAuthStateChange((firebaseUser) => {
     if (firebaseUser) {
       // User is signed in with Firebase
       currentUser.value = {
         id: firebaseUser.uid,
         email: firebaseUser.email,
-        displayName: firebaseUser.displayName || firebaseUser.email
+        displayName: firebaseUser.displayName || firebaseUser.email,
       }
     } else {
       // Check local storage as fallback
@@ -210,25 +212,31 @@ onMounted(() => {
 
   // Run migration once
   runMigration()
+})
 
-  onUnmounted(() => {
+onUnmounted(() => {
+  if (handleScroll) {
     window.removeEventListener('scroll', handleScroll)
-    saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
+  }
+  saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
+  if (unsubscribe) {
     unsubscribe()
-  })
+  }
 })
 
 // Watch for route changes to reload data
-watch(() => route.path, () => {
-  loadDataFromStorage()
-}, { immediate: false })
+watch(
+  () => route.path,
+  () => {
+    loadDataFromStorage()
+  },
+  { immediate: false },
+)
 </script>
 
 <template>
   <div id="app">
-    <NavigationBar
-      :is-scrolled="isScrolled"
-    />
+    <NavigationBar :is-scrolled="isScrolled" />
 
     <router-view
       :events="events"
@@ -249,9 +257,7 @@ watch(() => route.path, () => {
             <span class="text-muted me-3">
               <i class="bi bi-envelope me-1"></i>contact@sportsync.com
             </span>
-            <span class="text-muted">
-              <i class="bi bi-telephone me-1"></i>+1 (555) 123-4567
-            </span>
+            <span class="text-muted"> <i class="bi bi-telephone me-1"></i>+1 (555) 123-4567 </span>
           </div>
           <p class="text-muted mb-0">&copy; 2024 SportSync. All rights reserved.</p>
         </div>
@@ -267,7 +273,8 @@ watch(() => route.path, () => {
   box-sizing: border-box;
 }
 
-body, html {
+body,
+html {
   overflow-x: hidden;
 }
 
@@ -310,7 +317,7 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
-[role="button"]:focus-visible {
+[role='button']:focus-visible {
   outline: 3px solid #0d6efd;
   outline-offset: 2px;
 }

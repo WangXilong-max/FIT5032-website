@@ -59,7 +59,9 @@
       </div>
     </div>
   </div>
-</template><script>
+</template>
+
+<script>
 import { ref, onMounted, watch } from 'vue'
 import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { db } from '@/firebase/config'
@@ -74,20 +76,20 @@ import {
   lineChartOptions,
   barChartOptions,
   ageChartOptions,
-  genderChartOptions
+  genderChartOptions,
 } from '@/data/dashboardChartConfigs'
 
 import {
   annualTrendsColumns,
   regionalColumns,
   ageDistributionColumns,
-  genderAnalysisColumns
+  genderAnalysisColumns,
 } from '@/data/dashboardTableColumns'
 
 export default {
   name: 'DashboardView',
   components: {
-    ChartCard
+    ChartCard,
   },
   setup() {
     // Data refs
@@ -111,7 +113,7 @@ export default {
       '20-24 years': 5,
       '25-29 years': 6,
       '30-34 years': 7,
-      '35+ years': 8
+      '35+ years': 8,
     }
 
     // Load data from Firestore
@@ -122,26 +124,26 @@ export default {
           getDocs(query(collection(db, 'dashboard_annual_trends'), orderBy('year', 'asc'))),
           getDocs(collection(db, 'dashboard_regional')),
           getDocs(collection(db, 'dashboard_age_distribution')),
-          getDocs(collection(db, 'dashboard_gender'))
+          getDocs(collection(db, 'dashboard_gender')),
         ])
 
         // Process annual trends data
         annualTrendsData.value = annualSnapshot.docs.map((doc, index) => ({
           id: index + 1,
-          ...doc.data()
+          ...doc.data(),
         }))
 
         // Process regional data
         regionalData.value = regionalSnapshot.docs.map((doc, index) => ({
           id: index + 1,
-          ...doc.data()
+          ...doc.data(),
         }))
 
         // Process age distribution data with sorting
         ageDistributionData.value = ageSnapshot.docs
           .map((doc, index) => ({
             id: index + 1,
-            ...doc.data()
+            ...doc.data(),
           }))
           .sort((a, b) => {
             const orderA = ageOrder[a.ageGroup] || 999
@@ -152,7 +154,7 @@ export default {
         // Process gender analysis data
         genderAnalysisData.value = genderSnapshot.docs.map((doc, index) => ({
           id: index + 1,
-          ...doc.data()
+          ...doc.data(),
         }))
 
         // Generate chart data using imported functions
@@ -166,20 +168,24 @@ export default {
     }
 
     // Watch for data changes and regenerate charts
-    watch([annualTrendsData, regionalData, ageDistributionData, genderAnalysisData], () => {
-      if (annualTrendsData.value.length > 0) {
-        annualTrendsChartData.value = generateAnnualTrendsChart(annualTrendsData.value)
-      }
-      if (regionalData.value.length > 0) {
-        regionalChartData.value = generateRegionalChart(regionalData.value)
-      }
-      if (ageDistributionData.value.length > 0) {
-        ageChartData.value = generateAgeChart(ageDistributionData.value)
-      }
-      if (genderAnalysisData.value.length > 0) {
-        genderChartData.value = generateGenderChart(genderAnalysisData.value)
-      }
-    }, { deep: true })
+    watch(
+      [annualTrendsData, regionalData, ageDistributionData, genderAnalysisData],
+      () => {
+        if (annualTrendsData.value.length > 0) {
+          annualTrendsChartData.value = generateAnnualTrendsChart(annualTrendsData.value)
+        }
+        if (regionalData.value.length > 0) {
+          regionalChartData.value = generateRegionalChart(regionalData.value)
+        }
+        if (ageDistributionData.value.length > 0) {
+          ageChartData.value = generateAgeChart(ageDistributionData.value)
+        }
+        if (genderAnalysisData.value.length > 0) {
+          genderChartData.value = generateGenderChart(genderAnalysisData.value)
+        }
+      },
+      { deep: true },
+    )
 
     onMounted(async () => {
       await loadDashboardData()
@@ -205,9 +211,9 @@ export default {
       annualTrendsColumns,
       regionalColumns,
       ageDistributionColumns,
-      genderAnalysisColumns
+      genderAnalysisColumns,
     }
-  }
+  },
 }
 </script>
 

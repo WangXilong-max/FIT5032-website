@@ -13,48 +13,48 @@ const routes = [
   {
     path: '/',
     name: 'Home',
-    component: HomeView
+    component: HomeView,
   },
   {
     path: '/news',
     name: 'News',
-    component: NewsView
+    component: NewsView,
   },
   {
     path: '/activities',
     name: 'Activities',
-    component: ActivitiesView
+    component: ActivitiesView,
   },
   {
     path: '/activities/:id',
     name: 'ActivityInfo',
-    component: ActivityInfoView
+    component: ActivityInfoView,
   },
   {
     path: '/create-activity',
     name: 'CreateActivity',
-    component: CreateActivityView
+    component: CreateActivityView,
   },
   {
     path: '/my-activities',
     name: 'MyActivities',
-    component: MyActivityView
+    component: MyActivityView,
   },
   {
     path: '/dashboard',
     name: 'Dashboard',
-    component: DashboardView
+    component: DashboardView,
   },
   {
     path: '/signin',
     name: 'SignIn',
-    component: FirebaseSignInView
+    component: FirebaseSignInView,
   },
   {
     path: '/register',
     name: 'Register',
-    component: FirebaseRegisterView
-  }
+    component: FirebaseRegisterView,
+  },
 ]
 
 const router = createRouter({
@@ -65,7 +65,7 @@ const router = createRouter({
       return savedPosition
     }
     return { top: 0, behavior: 'smooth' }
-  }
+  },
 })
 
 export default router

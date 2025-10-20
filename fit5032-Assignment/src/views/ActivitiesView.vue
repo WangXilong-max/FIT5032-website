@@ -6,10 +6,7 @@
           <div class="text-center mb-4">
             <h2 class="display-4 fw-bold text-white">Activity Display</h2>
             <p class="lead text-white">Following are the created activities</p>
-            <router-link
-              to="/create-activity"
-              class="btn btn-primary btn-lg mt-3"
-            >
+            <router-link to="/create-activity" class="btn btn-primary btn-lg mt-3">
               <i class="bi bi-plus-circle me-2"></i>Create New Activity
             </router-link>
           </div>
@@ -38,22 +35,21 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
 import EventCard from '../components/EventCard.vue'
 
+// eslint-disable-next-line no-unused-vars
 const props = defineProps({
-  events: Array
+  events: Array,
 })
 
 // Define emits for parent component communication
 defineEmits(['delete', 'rate', 'join', 'leave'])
+</script>
 
-onMounted(() => {
-})
-</script><style scoped>
+<style scoped>
 .bg-gradient-light {
-  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
-              url('/backgroundactivity.jpg');
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('/backgroundactivity.jpg');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;

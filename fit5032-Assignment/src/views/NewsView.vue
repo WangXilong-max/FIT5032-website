@@ -4,14 +4,20 @@
       <div class="row text-center mb-5">
         <div class="col-lg-8 mx-auto">
           <h2 class="display-4 fw-bold mb-3">Sports News</h2>
-          <p class="lead text-light opacity-75">Stay updated with the latest local sports activities and events</p>
+          <p class="lead text-light opacity-75">
+            Stay updated with the latest local sports activities and events
+          </p>
         </div>
       </div>
       <div class="row g-4">
         <div v-for="news in sportsNews" :key="news.id" class="col-12 col-md-6 col-lg-4">
-          <div class="card news-card">
+          <article class="card news-card">
             <div class="position-relative overflow-hidden">
-              <img :src="news.image" :alt="news.title" class="card-img-top news-image">
+              <img
+                :src="news.image"
+                :alt="`${news.title} - ${news.category} news`"
+                class="card-img-top news-image"
+              />
               <div class="position-absolute top-0 start-0 m-3">
                 <span class="badge bg-primary rounded-pill">{{ news.category }}</span>
               </div>
@@ -22,11 +28,16 @@
               </div>
               <h5 class="card-title fw-bold">{{ news.title }}</h5>
               <p class="card-text text-muted">{{ news.summary }}</p>
-              <button class="btn btn-outline-primary mt-auto align-self-start">
-                Read More <i class="bi bi-arrow-right ms-1"></i>
+              <button
+                class="btn btn-outline-primary mt-auto align-self-start"
+                :aria-label="`Read more about ${news.title}`"
+                title="Read full article"
+              >
+                Read More
+                <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
               </button>
             </div>
-          </div>
+          </article>
         </div>
       </div>
     </div>

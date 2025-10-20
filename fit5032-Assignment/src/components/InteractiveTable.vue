@@ -12,7 +12,7 @@
         <button
           @click="toggleColumnFilters"
           class="btn btn-outline-dark btn-sm"
-          :class="{ 'active': showColumnFilters }"
+          :class="{ active: showColumnFilters }"
         >
           <i class="bi bi-funnel"></i>
         </button>
@@ -36,7 +36,8 @@
           />
         </div>
       </div>
-    </div>    <!-- Table -->
+    </div>
+    <!-- Table -->
     <div class="table-responsive">
       <table class="table table-striped table-hover">
         <thead class="table-dark">
@@ -45,12 +46,18 @@
               v-for="column in columns"
               :key="column.key"
               @click="column.sortable ? sortBy(column.key) : null"
-              :class="{ 'sortable': column.sortable }"
+              :class="{ sortable: column.sortable }"
             >
               {{ column.label }}
               <span v-if="column.sortable" class="sort-indicator">
-                <i v-if="sortKey === column.key && sortOrder === 'asc'" class="bi bi-caret-up-fill"></i>
-                <i v-else-if="sortKey === column.key && sortOrder === 'desc'" class="bi bi-caret-down-fill"></i>
+                <i
+                  v-if="sortKey === column.key && sortOrder === 'asc'"
+                  class="bi bi-caret-up-fill"
+                ></i>
+                <i
+                  v-else-if="sortKey === column.key && sortOrder === 'desc'"
+                  class="bi bi-caret-down-fill"
+                ></i>
                 <i v-else class="bi bi-caret-up text-muted"></i>
               </span>
             </th>
@@ -117,16 +124,16 @@ export default {
   props: {
     data: {
       type: Array,
-      required: true
+      required: true,
     },
     columns: {
       type: Array,
-      required: true
+      required: true,
     },
     tableTitle: {
       type: String,
-      default: 'Data Table'
-    }
+      default: 'Data Table',
+    },
   },
   setup(props) {
     // Reactive state
@@ -139,7 +146,7 @@ export default {
     const showColumnFilters = ref(false)
 
     // Initialize column searches
-    props.columns.forEach(column => {
+    props.columns.forEach((column) => {
       if (column.searchable) {
         columnSearches[column.key] = ''
       }
@@ -147,7 +154,7 @@ export default {
 
     // Computed properties
     const searchableColumns = computed(() => {
-      return props.columns.filter(column => column.searchable)
+      return props.columns.filter((column) => column.searchable)
     })
 
     const filteredData = computed(() => {
@@ -156,8 +163,8 @@ export default {
       // Apply global search
       if (globalSearch.value) {
         const searchTerm = globalSearch.value.toLowerCase()
-        filtered = filtered.filter(item => {
-          return props.columns.some(column => {
+        filtered = filtered.filter((item) => {
+          return props.columns.some((column) => {
             const value = item[column.key]
             return String(value).toLowerCase().includes(searchTerm)
           })
@@ -165,10 +172,10 @@ export default {
       }
 
       // Apply column-specific searches
-      Object.keys(columnSearches).forEach(key => {
+      Object.keys(columnSearches).forEach((key) => {
         const searchTerm = columnSearches[key]
         if (searchTerm) {
-          filtered = filtered.filter(item => {
+          filtered = filtered.filter((item) => {
             const value = item[key]
             return String(value).toLowerCase().includes(searchTerm.toLowerCase())
           })
@@ -215,7 +222,9 @@ export default {
     })
 
     const paginationStart = computed(() => {
-      return filteredData.value.length === 0 ? 0 : (currentPage.value - 1) * entriesPerPage.value + 1
+      return filteredData.value.length === 0
+        ? 0
+        : (currentPage.value - 1) * entriesPerPage.value + 1
     })
 
     const paginationEnd = computed(() => {
@@ -296,9 +305,9 @@ export default {
       sortBy,
       goToPage,
       toggleColumnFilters,
-      formatCellValue
+      formatCellValue,
     }
-  }
+  },
 }
 </script>
 
@@ -376,7 +385,8 @@ export default {
     width: 150px;
   }
 
-  .table th, .table td {
+  .table th,
+  .table td {
     font-size: 0.8rem;
     padding: 0.4rem 0.5rem;
   }

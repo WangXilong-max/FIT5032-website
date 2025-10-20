@@ -2,9 +2,7 @@
   <div class="col-12">
     <div class="card shadow-sm">
       <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-        <h6 class="mb-0">
-          <i :class="`bi ${icon} me-2`"></i>{{ title }}
-        </h6>
+        <h6 class="mb-0"><i :class="`bi ${icon} me-2`"></i>{{ title }}</h6>
         <div class="btn-group btn-group-sm">
           <button @click="exportCSV" class="btn btn-outline-light" aria-label="Export as CSV">
             <i class="bi bi-file-earmark-spreadsheet me-1"></i>CSV
@@ -19,20 +17,12 @@
           <!-- Chart Section -->
           <div class="col-lg-7">
             <h6 class="text-muted mb-3">{{ chartTitle }}</h6>
-            <DataChart
-              :type="chartType"
-              :data="chartData"
-              :options="chartOptions"
-            />
+            <DataChart :type="chartType" :data="chartData" :options="chartOptions" />
           </div>
           <!-- Table Section -->
           <div class="col-lg-5">
             <h6 class="text-muted mb-3">Data Table</h6>
-            <InteractiveTable
-              :data="tableData"
-              :columns="tableColumns"
-              table-title=""
-            />
+            <InteractiveTable :data="tableData" :columns="tableColumns" table-title="" />
           </div>
         </div>
       </div>
@@ -50,57 +40,55 @@ export default {
   name: 'ChartCard',
   components: {
     InteractiveTable,
-    DataChart
+    DataChart,
   },
   props: {
     // Card header
     title: {
       type: String,
-      required: true
+      required: true,
     },
     icon: {
       type: String,
-      default: 'bi-graph-up'
+      default: 'bi-graph-up',
     },
     // Chart section
     chartTitle: {
       type: String,
-      required: true
+      required: true,
     },
     chartType: {
       type: String,
       required: true,
-      validator: (value) => ['line', 'bar', 'pie', 'doughnut'].includes(value)
+      validator: (value) => ['line', 'bar', 'pie', 'doughnut'].includes(value),
     },
     chartData: {
       type: Object,
-      required: true
+      required: true,
     },
     chartOptions: {
       type: Object,
-      default: () => ({})
+      default: () => ({}),
     },
     // Table section
     tableData: {
       type: Array,
-      required: true
+      required: true,
     },
     tableColumns: {
       type: Array,
-      required: true
-    }
+      required: true,
+    },
   },
   methods: {
     exportCSV() {
-      const headers = this.tableColumns.map(col => col.label)
-      const rows = this.tableData.map(item =>
-        this.tableColumns.map(col => item[col.key] || '')
-      )
-      
+      const headers = this.tableColumns.map((col) => col.label)
+      const rows = this.tableData.map((item) => this.tableColumns.map((col) => item[col.key] || ''))
+
       const csv = [headers, ...rows]
-        .map(row => row.map(cell => `"${cell}"`).join(','))
+        .map((row) => row.map((cell) => `"${cell}"`).join(','))
         .join('\n')
-      
+
       const blob = new Blob([csv], { type: 'text/csv' })
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -109,30 +97,28 @@ export default {
       link.click()
       URL.revokeObjectURL(url)
     },
-    
+
     exportPDF() {
       const doc = new jsPDF()
-      
+
       doc.setFontSize(14)
       doc.text(this.title, 14, 15)
-      
-      const headers = this.tableColumns.map(col => col.label)
-      const rows = this.tableData.map(item =>
-        this.tableColumns.map(col => item[col.key] || '')
-      )
-      
+
+      const headers = this.tableColumns.map((col) => col.label)
+      const rows = this.tableData.map((item) => this.tableColumns.map((col) => item[col.key] || ''))
+
       autoTable(doc, {
         head: [headers],
         body: rows,
         startY: 25,
         theme: 'grid',
         headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255] },
-        styles: { fontSize: 9 }
+        styles: { fontSize: 9 },
       })
-      
+
       doc.save(`${this.title}.pdf`)
-    }
-  }
+    },
+  },
 }
 </script>
 
@@ -140,13 +126,15 @@ export default {
 .card {
   border: none;
   border-radius: 12px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   background: white;
 }
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
 }
 
 .card-header {

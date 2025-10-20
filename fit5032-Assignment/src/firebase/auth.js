@@ -1,10 +1,9 @@
-
 // Firebase Authentication Service
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
 } from 'firebase/auth'
 import { auth } from './config'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
@@ -21,7 +20,7 @@ export const registerUser = async (email, password, displayName = null) => {
       email: user.email,
       displayName: displayName || email.split('@')[0],
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     })
 
     return { success: true, user }

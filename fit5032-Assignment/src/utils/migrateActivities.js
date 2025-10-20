@@ -21,7 +21,7 @@ export const migrateActivitiesToIncludeRatings = async () => {
 
         await updateDoc(activityRef, {
           ratings: data.ratings || [],
-          averageRating: data.averageRating || 0
+          averageRating: data.averageRating || 0,
         })
 
         updatedCount++
