@@ -500,6 +500,68 @@ export const getDashboardStats = async () => {
   }
 }
 
+/**
+ * Check for booking conflicts for a user
+ * @param {string} userId - User ID to check conflicts for
+ * @param {string} date - Activity date (YYYY-MM-DD)
+ * @param {string} time - Activity time (HH:MM)
+ * @param {string} excludeActivityId - Optional activity ID to exclude from check
+ * @returns {Promise<Object>} { hasConflict: boolean, conflictingActivity: Object|null }
+ */
+export const checkBookingConflict = async (userId, date, time, excludeActivityId = null) => {
+  try {
+    const activitiesRef = collection(db, 'activities')
+    const q = query(activitiesRef, where('date', '==', date))
+    const querySnapshot = await getDocs(q)
+
+    const userActivities = querySnapshot.docs
+      .map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+      .filter((activity) => {
+        // Skip if it's the same activity being edited
+        if (excludeActivityId && activity.id === excludeActivityId) return false
+        
+        // Check if user is creator or participant
+        const isCreator = activity.creatorId === userId
+        const isParticipant = activity.participants?.includes(userId)
+        
+        return (isCreator || isParticipant) && activity.status !== 'cancelled'
+      })
+
+    // Check for time conflicts (within 2 hours window)
+    for (const activity of userActivities) {
+      const activityTime = activity.time
+      const [activityHour, activityMin] = activityTime.split(':').map(Number)
+      const [newHour, newMin] = time.split(':').map(Number)
+
+      const activityMinutes = activityHour * 60 + activityMin
+      const newMinutes = newHour * 60 + newMin
+      const timeDiff = Math.abs(activityMinutes - newMinutes)
+
+      // Conflict if within 2 hours (120 minutes)
+      if (timeDiff < 120) {
+        return {
+          hasConflict: true,
+          conflictingActivity: activity,
+        }
+      }
+    }
+
+    return {
+      hasConflict: false,
+      conflictingActivity: null,
+    }
+  } catch (error) {
+    console.error('Error checking booking conflict:', error)
+    return {
+      hasConflict: false,
+      conflictingActivity: null,
+    }
+  }
+}
+
 export default {
   // Activities
   getAllActivities,
@@ -524,4 +586,7 @@ export default {
 
   // Dashboard
   getDashboardStats,
+
+  // Booking Conflicts
+  checkBookingConflict,
 }

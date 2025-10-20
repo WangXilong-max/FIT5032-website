@@ -40,6 +40,11 @@
               >Dashboard</router-link
             >
           </li>
+          <li class="nav-item">
+            <router-link to="/api-test" class="nav-link" active-class="active"
+              >REST API</router-link
+            >
+          </li>
 
           <!-- Show Login/Register when NOT logged in -->
           <template v-if="!currentUser">

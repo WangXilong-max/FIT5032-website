@@ -187,3 +187,102 @@ exports.activityReminderBefore24Hours = functions.pubsub
       console.error('Error in activityReminderBefore24Hours:', error);
     }
   });
+
+// ==================== REST API Endpoints ====================
+// 
+// Usage Examples:
+// 1. Get all activities: GET https://your-project.cloudfunctions.net/getActivities
+// 2. Get specific activity: GET https://your-project.cloudfunctions.net/getActivityById?id=ACTIVITY_ID
+//
+// Response format: { success: true/false, data: {...}, count: number, error: string }
+//
+
+// REST API 1: Get all activities
+exports.getActivities = functions.https.onRequest(async (req, res) => {
+  // Enable CORS
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET');
+  
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  if (req.method !== 'GET') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
+  try {
+    const activitiesSnapshot = await db.collection('activities').get();
+    const activities = activitiesSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    res.status(200).json({
+      success: true,
+      count: activities.length,
+      data: activities
+    });
+  } catch (error) {
+    console.error('Error fetching activities:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch activities' 
+    });
+  }
+});
+
+// REST API 2: Get activity by ID
+exports.getActivityById = functions.https.onRequest(async (req, res) => {
+  // Enable CORS
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET');
+  
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  if (req.method !== 'GET') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
+  try {
+    const activityId = req.query.id;
+    
+    if (!activityId) {
+      res.status(400).json({ 
+        success: false, 
+        error: 'Activity ID is required. Use ?id=YOUR_ACTIVITY_ID' 
+      });
+      return;
+    }
+
+    const activityDoc = await db.collection('activities').doc(activityId).get();
+    
+    if (!activityDoc.exists) {
+      res.status(404).json({ 
+        success: false, 
+        error: 'Activity not found' 
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        id: activityDoc.id,
+        ...activityDoc.data()
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching activity:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch activity' 
+    });
+  }
+});

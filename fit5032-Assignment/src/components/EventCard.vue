@@ -9,7 +9,7 @@
       <small class="text-muted" style="font-size: 0.75rem">{{ event.date }}</small>
       <button
         v-if="isCreator"
-        class="btn btn-outline-danger btn-xs p-1"
+        class="btn btn-dark btn-xs p-1 text-white"
         @click="$emit('delete', event.id)"
         aria-label="Delete event"
         title="Delete this event"

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, provide, watch } from 'vue'
+import { ref, onMounted, onUnmounted, provide, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import NavigationBar from './components/NavigationBar.vue'
 import { STORAGE_KEYS, saveToLocalStorage, loadFromLocalStorage } from './utils/storage.js'
@@ -23,29 +23,20 @@ const loadDataFromStorage = async () => {
     const { getAllActivities } = await import('@/firebase/database')
     const firestoreEvents = await getAllActivities()
 
-    if (firestoreEvents.length > 0) {
-      events.value = firestoreEvents.map((event) => ({
-        ...event,
-        ratings: event.ratings || [],
-        averageRating: event.averageRating || 0,
-        participants: event.participants || [],
-        participantCount: event.participantCount || 0,
-      }))
+    // Always use Firestore as source of truth
+    events.value = firestoreEvents.map((event) => ({
+      ...event,
+      ratings: event.ratings || [],
+      averageRating: event.averageRating || 0,
+      participants: event.participants || [],
+      participantCount: event.participantCount || 0,
+    }))
 
-      saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
-    } else {
-      const savedEvents = loadFromLocalStorage(STORAGE_KEYS.EVENTS, [])
-
-      events.value = savedEvents.map((event) => ({
-        ...event,
-        ratings: event.ratings || [],
-        averageRating: event.averageRating || 0,
-        participants: event.participants || [],
-        participantCount: event.participantCount || 0,
-      }))
-    }
+    // Sync to localStorage
+    saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
   } catch (error) {
     console.error('Error loading data:', error)
+    // Only use localStorage as fallback if Firestore fails
     const savedEvents = loadFromLocalStorage(STORAGE_KEYS.EVENTS, [])
     events.value = savedEvents
   }
@@ -65,13 +56,25 @@ const deleteEvent = async (eventId) => {
     return
   }
 
-  if (!confirm('Delete this event?')) return
+  // Confirm deletion
+  if (!confirm(`Are you sure you want to delete "${event.name}"?`)) {
+    return
+  }
 
   try {
     const { deleteActivity } = await import('@/firebase/database')
-    await deleteActivity(eventId)
-    events.value = events.value.filter((e) => e.id !== eventId)
-    saveToLocalStorage(STORAGE_KEYS.EVENTS, events.value)
+    const success = await deleteActivity(eventId)
+    
+    if (success) {
+      // Reload data from Firestore to ensure consistency
+      await loadDataFromStorage()
+      
+      // Wait for Vue to update the DOM before showing alert
+      await nextTick()
+      alert('Activity deleted successfully!')
+    } else {
+      alert('Failed to delete activity. Please try again.')
+    }
   } catch (error) {
     console.error('Error deleting event:', error)
     alert('Failed to delete event')

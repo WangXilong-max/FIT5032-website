@@ -613,6 +613,24 @@ const handleSubmit = async () => {
   isSubmitting.value = true
 
   try {
+    // Check for booking conflicts
+    const { checkBookingConflict } = await import('@/firebase/database')
+    const conflictCheck = await checkBookingConflict(
+      currentUser.value.id,
+      form.eventDate,
+      form.eventTime,
+    )
+
+    if (conflictCheck.hasConflict) {
+      const conflict = conflictCheck.conflictingActivity
+      const confirmMsg = `WARNING: Booking Conflict Detected!\n\nYou already have "${conflict.name}" scheduled on ${conflict.date} at ${conflict.time}.\n\nThis is within 2 hours of your new activity.\n\nDo you want to create this activity anyway?`
+
+      if (!confirm(confirmMsg)) {
+        isSubmitting.value = false
+        return
+      }
+    }
+
     // Create event object
     const eventData = {
       name: form.eventName,

@@ -8,6 +8,7 @@ import ActivityInfoView from '../views/ActivityInfoView.vue'
 import FirebaseSignInView from '../views/FirebaseSignInView.vue'
 import FirebaseRegisterView from '../views/FirebaseRegisterView.vue'
 import DashboardView from '../views/DashboardView.vue'
+import ApiTestView from '../views/ApiTestView.vue'
 
 const routes = [
   {
@@ -44,6 +45,11 @@ const routes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: DashboardView,
+  },
+  {
+    path: '/api-test',
+    name: 'ApiTest',
+    component: ApiTestView,
   },
   {
     path: '/signin',

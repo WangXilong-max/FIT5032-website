@@ -86,14 +86,14 @@
                       <span class="badge bg-primary">{{ activity.category }}</span>
                       <div class="ms-auto d-flex gap-2">
                         <button
-                          class="btn btn-sm btn-info text-white"
+                          class="btn btn-sm btn-dark text-white"
                           @click="viewDetails(activity.id)"
                           title="View activity details"
                         >
                           <i class="bi bi-eye me-1"></i>Check Details
                         </button>
                         <button
-                          class="btn btn-sm btn-danger"
+                          class="btn btn-sm btn-dark text-white"
                           @click="deleteActivity(activity)"
                           title="Delete this activity"
                         >
@@ -177,7 +177,6 @@ import { STORAGE_KEYS, loadFromLocalStorage } from '../utils/storage.js'
 import { onAuthStateChange } from '@/firebase/auth'
 import ParticipantsModal from '../components/ParticipantsModal.vue'
 import { Modal } from 'bootstrap'
-import { deleteActivity as deleteActivityFromDB } from '@/firebase/database'
 
 const router = useRouter()
 
@@ -189,13 +188,16 @@ const props = defineProps({
   },
 })
 
+// Emits
+const emit = defineEmits(['delete'])
+
 // State
 const user = ref(null)
 const participantsModalRef = ref(null)
 const selectedActivityId = ref(null)
 const selectedActivityName = ref('')
 
-// Calendar options
+// Calendar options (handlers will be set after functions are defined)
 const calendarOptions = ref({
   plugins: [dayGridPlugin, interactionPlugin],
   initialView: 'dayGridMonth',
@@ -279,30 +281,78 @@ const viewDetails = (activityId) => {
   router.push(`/activities/${activityId}`)
 }
 
-const deleteActivity = async (activity) => {
-  if (!confirm(`Are you sure you want to delete "${activity.name}"?`)) {
+const deleteActivity = (activity) => {
+  // Emit delete event to parent component (App.vue)
+  emit('delete', activity.id)
+}
+
+const handleDateClick = async (info) => {
+  if (!user.value) return
+
+  const clickedDate = info.dateStr
+  
+  // Find activities on this date
+  const activitiesOnDate = [...myCreatedActivities.value, ...myJoinedActivities.value].filter(
+    (activity) => activity.date === clickedDate,
+  )
+
+  if (activitiesOnDate.length === 0) {
+    alert(`No activities scheduled on ${clickedDate}.\n\nClick "Create New Activity" to add one.`)
     return
   }
 
-  try {
-    const success = await deleteActivityFromDB(activity.id)
-    if (success) {
-      alert('Activity deleted successfully!')
-      // Reload the page to refresh the activity list
-      window.location.reload()
-    } else {
-      alert('Failed to delete activity. Please try again.')
+  // Check for conflicts on this date
+  const conflicts = []
+  for (let i = 0; i < activitiesOnDate.length; i++) {
+    for (let j = i + 1; j < activitiesOnDate.length; j++) {
+      const activity1 = activitiesOnDate[i]
+      const activity2 = activitiesOnDate[j]
+
+      const [hour1, min1] = activity1.time.split(':').map(Number)
+      const [hour2, min2] = activity2.time.split(':').map(Number)
+
+      const minutes1 = hour1 * 60 + min1
+      const minutes2 = hour2 * 60 + min2
+      const timeDiff = Math.abs(minutes1 - minutes2)
+
+      if (timeDiff < 120) {
+        conflicts.push({ activity1, activity2, timeDiff })
+      }
     }
-  } catch (error) {
-    console.error('Error deleting activity:', error)
-    alert('An error occurred while deleting the activity.')
   }
+
+  let message = `Activities on ${clickedDate}:\n\n`
+  activitiesOnDate.forEach((activity, index) => {
+    message += `${index + 1}. ${activity.name}\n   Time: ${activity.time}\n   Location: ${activity.location}\n\n`
+  })
+
+  if (conflicts.length > 0) {
+    message += `\n⚠️ CONFLICT WARNING:\n\n`
+    conflicts.forEach((conflict) => {
+      const hoursDiff = Math.floor(conflict.timeDiff / 60)
+      const minsDiff = conflict.timeDiff % 60
+      message += `"${conflict.activity1.name}" (${conflict.activity1.time}) and "${conflict.activity2.name}" (${conflict.activity2.time}) are only ${hoursDiff}h ${minsDiff}m apart!\n\n`
+    })
+  } else if (activitiesOnDate.length > 1) {
+    message += `✅ No conflicts detected. All activities are at least 2 hours apart.`
+  }
+
+  alert(message)
+}
+
+const handleEventClick = (info) => {
+  const eventId = info.event.id
+  viewDetails(eventId)
 }
 
 // Lifecycle
 onMounted(() => {
   loadUser()
   updateCalendar()
+  
+  // Set calendar event handlers after functions are defined
+  calendarOptions.value.dateClick = handleDateClick
+  calendarOptions.value.eventClick = handleEventClick
 })
 
 // Watch for changes and update calendar
