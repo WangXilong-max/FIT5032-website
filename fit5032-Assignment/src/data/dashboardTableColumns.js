@@ -16,8 +16,32 @@ export const regionalColumns = [
   { key: 'lowestRate', label: 'Min Rate', sortable: true, searchable: true },
 ]
 
+// Age group custom sorting order
+const ageOrder = {
+  '4 years': 1,
+  '5-9 years': 2,
+  '10-14 years': 3,
+  '15-19 years': 4,
+  '20-24 years': 5,
+  '25-29 years': 6,
+  '30-34 years': 7,
+  '35+ years': 8,
+}
+
 export const ageDistributionColumns = [
-  { key: 'ageGroup', label: 'Age Group', sortable: true, searchable: true },
+  { 
+    key: 'ageGroup', 
+    label: 'Age Group', 
+    sortable: true, 
+    searchable: true,
+    customSort: (a, b) => {
+      const ageA = (a || '').trim()
+      const ageB = (b || '').trim()
+      const orderA = ageOrder[ageA] || 999
+      const orderB = ageOrder[ageB] || 999
+      return orderA - orderB
+    }
+  },
   { key: 'participationRate', label: 'Participation Rate', sortable: true, searchable: true },
   { key: 'category', label: 'Category', sortable: true, searchable: true },
 ]

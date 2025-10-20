@@ -141,8 +141,7 @@ export default {
 
         // Process age distribution data with sorting
         ageDistributionData.value = ageSnapshot.docs
-          .map((doc, index) => ({
-            id: index + 1,
+          .map((doc) => ({
             ...doc.data(),
           }))
           .sort((a, b) => {
@@ -150,6 +149,10 @@ export default {
             const orderB = ageOrder[b.ageGroup] || 999
             return orderA - orderB
           })
+          .map((item, index) => ({
+            id: index + 1,
+            ...item,
+          }))
 
         // Process gender analysis data
         genderAnalysisData.value = genderSnapshot.docs.map((doc, index) => ({

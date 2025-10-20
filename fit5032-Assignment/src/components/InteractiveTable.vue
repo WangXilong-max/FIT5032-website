@@ -136,8 +136,11 @@ export default {
     },
   },
   setup(props) {
+    // Find if there's a column with customSort to use as default sort
+    const defaultSortColumn = props.columns.find(col => col.customSort && col.sortable)
+    
     // Reactive state
-    const sortKey = ref('')
+    const sortKey = ref(defaultSortColumn ? defaultSortColumn.key : '')
     const sortOrder = ref('asc')
     const globalSearch = ref('')
     const columnSearches = reactive({})
@@ -188,10 +191,31 @@ export default {
     const sortedData = computed(() => {
       let sorted = [...filteredData.value]
 
-      if (sortKey.value) {
+      // Determine which column to sort by
+      let columnToSort = null
+      let keyToSort = sortKey.value
+      
+      // If no explicit sort, use the default column with customSort
+      if (!keyToSort) {
+        const defaultCol = props.columns.find(col => col.customSort && col.sortable)
+        if (defaultCol) {
+          columnToSort = defaultCol
+          keyToSort = defaultCol.key
+        }
+      } else {
+        columnToSort = props.columns.find(col => col.key === keyToSort)
+      }
+
+      if (keyToSort) {
         sorted.sort((a, b) => {
-          let aVal = a[sortKey.value]
-          let bVal = b[sortKey.value]
+          let aVal = a[keyToSort]
+          let bVal = b[keyToSort]
+
+          // Use custom sort function if provided
+          if (columnToSort && columnToSort.customSort) {
+            const result = columnToSort.customSort(aVal, bVal)
+            return sortOrder.value === 'asc' ? result : -result
+          }
 
           // Handle different data types
           if (typeof aVal === 'number' && typeof bVal === 'number') {

@@ -66,18 +66,41 @@ export const generateRegionalChart = (data) => ({
   ],
 })
 
-export const generateAgeChart = (data) => ({
-  labels: data.map((d) => d.ageGroup),
-  datasets: [
-    {
-      label: 'Participation Rate (%)',
-      data: data.map((d) => parsePercentage(d.participationRate)),
-      backgroundColor: chartColors.ageGradient,
-      borderColor: chartColors.primary,
-      borderWidth: 1,
-    },
-  ],
-})
+// Age group sorting order for chart
+const ageOrder = {
+  '4 years': 1,
+  '5-9 years': 2,
+  '10-14 years': 3,
+  '15-19 years': 4,
+  '20-24 years': 5,
+  '25-29 years': 6,
+  '30-34 years': 7,
+  '35+ years': 8,
+}
+
+export const generateAgeChart = (data) => {
+  // Sort data by age order before generating chart
+  const sortedData = [...data].sort((a, b) => {
+    const ageGroupA = (a.ageGroup || '').trim()
+    const ageGroupB = (b.ageGroup || '').trim()
+    const orderA = ageOrder[ageGroupA] || 999
+    const orderB = ageOrder[ageGroupB] || 999
+    return orderA - orderB
+  })
+
+  return {
+    labels: sortedData.map((d) => d.ageGroup),
+    datasets: [
+      {
+        label: 'Participation Rate (%)',
+        data: sortedData.map((d) => parsePercentage(d.participationRate)),
+        backgroundColor: chartColors.ageGradient,
+        borderColor: chartColors.primary,
+        borderWidth: 1,
+      },
+    ],
+  }
+}
 
 export const generateGenderChart = (data) => {
   const filtered = data.filter((d) => d.category === 'Individual')
