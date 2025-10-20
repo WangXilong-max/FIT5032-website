@@ -1,9 +1,9 @@
 <template>
   <div class="api-test-page">
-    <div class="container py-5">
+    <div class="container py-4 mt-4">
       <div class="text-center mb-4">
-        <h2>REST API Testing</h2>
-        <p class="text-muted">Public APIs for third-party access</p>
+        <h2 class="display-4 fw-bold">REST API Testing</h2>
+        <p class="lead text-muted">Public APIs for third-party access</p>
       </div>
 
       <!-- API 1 -->

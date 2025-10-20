@@ -2,7 +2,7 @@
   <!-- Skip Link for Accessibility -->
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
-  <section class="py-5 bg-gradient-light">
+  <section class="bg-gradient-light">
     <div class="container py-5">
       <!-- Loading State -->
       <div v-if="isCheckingAuth" class="text-center py-5">
@@ -724,6 +724,7 @@ onMounted(() => {
   background-position: center;
   background-attachment: fixed;
   min-height: 100vh;
+  padding-top: 80px;
 }
 
 /* Skip link for accessibility */

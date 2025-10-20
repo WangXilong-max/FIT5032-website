@@ -1,6 +1,6 @@
 <template>
-  <section id="news" class="py-5 news-section text-white">
-    <div class="container py-5">
+  <section id="news" class="news-section text-white">
+    <div class="container py-4 mt-4">
       <div class="row text-center mb-5">
         <div class="col-lg-8 mx-auto">
           <h2 class="display-4 fw-bold mb-3">Sports News</h2>
@@ -52,6 +52,7 @@ import { sportsNews } from '../data/sportsData.js'
 .news-section {
   background: #000000 !important;
   min-height: 100vh;
+  padding-top: 80px;
 }
 
 .news-card {

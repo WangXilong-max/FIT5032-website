@@ -7,7 +7,7 @@
           v-model="globalSearch"
           type="text"
           class="form-control form-control-sm search-input"
-          placeholder="🔍 Search..."
+          placeholder="Search..."
         />
         <button
           @click="toggleColumnFilters"

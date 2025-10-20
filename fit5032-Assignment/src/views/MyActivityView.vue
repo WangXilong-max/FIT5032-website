@@ -1,6 +1,6 @@
 <template>
   <div class="my-activities-page">
-    <div class="container py-5">
+    <div class="container py-4 mt-4">
       <!-- Page Title -->
       <div class="text-center mb-5">
         <h1 class="display-4 fw-bold">My Activities</h1>
@@ -116,7 +116,7 @@
               <div class="card-body">
                 <div v-if="myJoinedActivities.length === 0" class="text-center text-muted py-4">
                   <p>No activities joined yet</p>
-                  <router-link to="/activities" class="btn btn-success btn-sm">
+                  <router-link to="/activities" class="btn btn-dark text-white btn-sm">
                     Browse Activities
                   </router-link>
                 </div>
@@ -384,7 +384,12 @@ watch(
 <style scoped>
 .my-activities-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: 
+    linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)),
+    url('/myactivitybg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
   padding-top: 80px;
 }
 

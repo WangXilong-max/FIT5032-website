@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-container">
-    <div class="container-fluid mt-4">
+    <div class="container-fluid py-4 mt-4">
       <!-- Header -->
       <div class="text-center mb-5">
         <h2 class="display-4 fw-bold text-dark">Sports Participation Analytics Dashboard</h2>
@@ -220,7 +220,12 @@ export default {
 <style scoped>
 .dashboard-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: 
+    linear-gradient(rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.85)),
+    url('/dashboardbg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
   padding-top: 80px;
 }
 </style>

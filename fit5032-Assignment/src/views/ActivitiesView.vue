@@ -1,5 +1,5 @@
 <template>
-  <section id="activities" class="py-5 bg-gradient-light">
+  <section id="activities" class="bg-gradient-light">
     <div class="container py-5">
       <div class="row mb-5">
         <div class="col-12">
@@ -25,9 +25,9 @@
           </div>
         </div>
         <div v-else class="text-center py-5">
-          <i class="bi bi-calendar-x display-1 text-muted"></i>
-          <h3 class="mt-3 text-muted">No Event Data Available</h3>
-          <p class="text-muted">No events have been created yet</p>
+          <i class="bi bi-calendar-x display-1 text-white"></i>
+          <h3 class="mt-3 text-white">No Event Data Available</h3>
+          <p class="text-white">No events have been created yet</p>
         </div>
       </div>
     </div>
@@ -54,6 +54,7 @@ defineEmits(['delete', 'rate', 'join', 'leave'])
   background-position: center;
   background-attachment: fixed;
   min-height: 100vh;
+  padding-top: 80px;
 }
 
 i.display-1 {
